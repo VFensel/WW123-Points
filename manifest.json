@@ -1,0 +1,14 @@
+{
+  "name": "Classic WW POINTS Calculator",
+  "short_name": "WW POINTS",
+  "description": "Historical Weight Watchers POINTS calculator and daily tracker.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f2f8",
+  "theme_color": "#5b4b8a",
+  "icons": [
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
