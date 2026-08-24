@@ -28,11 +28,24 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 .favorite-chip:hover{background:#ddd}
 .log-total{font-size:22px;font-weight:bold;text-align:center;color:#5b4b8a;margin-top:10px}
 
+
+.share-card{text-align:center}
+.share-card button{font-size:16px}
+.share-status{margin-top:10px;font-size:13px;color:#666}
+
 </style>
 </head>
 <body>
 <header><h1>Classic WW POINTS Calculator</h1><p>Historical calories + fat + fiber POINTS system</p></header>
 <main>
+
+<section class="card share-card">
+<h2>Share This App</h2>
+<p class="note">Send the Classic WW POINTS calculator to a friend or family member.</p>
+<button onclick="shareApp()">Share App</button>
+<div id="shareStatus" class="share-status"></div>
+</section>
+
 <section class="card">
 <h2>Food POINTS Calculator</h2>
 <div class="grid">
@@ -309,6 +322,36 @@ if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
   state.used=foodTotalForDay(localDateKey());
 }
 update();
+
+
+async function shareApp(){
+  const url="https://vfensel.github.io/WW123-Points/";
+  const data={
+    title:"Classic WW POINTS Calculator",
+    text:"Classic Weight Watchers POINTS calculator and tracker",
+    url:url
+  };
+  const status=document.getElementById("shareStatus");
+  try{
+    if(navigator.share){
+      await navigator.share(data);
+      if(status) status.textContent="Share menu opened.";
+    }else if(navigator.clipboard){
+      await navigator.clipboard.writeText(url);
+      if(status) status.textContent="Link copied to clipboard.";
+    }else{
+      if(status) status.textContent="Share this link: "+url;
+    }
+  }catch(err){
+    if(err && err.name==="AbortError") return;
+    try{
+      await navigator.clipboard.writeText(url);
+      if(status) status.textContent="Link copied to clipboard.";
+    }catch(e){
+      if(status) status.textContent="Share this link: "+url;
+    }
+  }
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
