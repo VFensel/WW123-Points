@@ -138,49 +138,72 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 </section>
 </main>
 <script>
+let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
+  minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],
+  weekStart:new Date().toISOString().slice(0,10),foodLog:{},favorites:[]
+};
 if(!state.foodLog) state.foodLog={};
 if(!state.favorites) state.favorites=[];
+if(!Array.isArray(state.history)) state.history=[];
 
-let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
- minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],weekStart:new Date().toISOString().slice(0,10),foodLog:{},favorites:[]
-};
 function save(){localStorage.setItem("classicWWState",JSON.stringify(state));}
 function roundWW(x){return Math.floor(x+0.5);}
-function foodPoints(){
- const c=+document.getElementById('cal').value||0;
- const f=+document.getElementById('fat').value||0;
- const r=Math.min(+document.getElementById('fiber').value||0,4);
- const p=roundWW(c/50+f/12-r/5);
- document.getElementById('foodResult').textContent=p+" POINT"+(p===1?"":"S");
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 }
-function rangeFor(w){
- if(w<150)return[18,25]; if(w<175)return[20,27]; if(w<200)return[22,29];
- if(w<225)return[24,31]; if(w<=250)return[26,33]; return[28,35];
-}
-function dailyTarget(){
- const w=+document.getElementById('weight').value;
- if(!w)return;
- [state.minPts,state.maxPts]=rangeFor(w);
- document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts;
- save(); update();
-}
-
 function localDateKey(){
   const d=new Date();
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
+
+function foodPoints(){
+  const c=+document.getElementById('cal').value||0;
+  const f=+document.getElementById('fat').value||0;
+  const r=Math.min(+document.getElementById('fiber').value||0,4);
+  const p=roundWW(c/50+f/12-r/5);
+  document.getElementById('foodResult').textContent=p+" POINT"+(p===1?"":"S");
+}
+
+function rangeFor(w){
+  if(w<150)return[18,25];
+  if(w<175)return[20,27];
+  if(w<200)return[22,29];
+  if(w<225)return[24,31];
+  if(w<=250)return[26,33];
+  return[28,35];
+}
+
+function dailyTarget(){
+  const input=document.getElementById('weight');
+  const w=parseFloat(input.value);
+  const out=document.getElementById('targetResult');
+  if(!Number.isFinite(w) || w<=0){
+    out.textContent="Enter your weight";
+    return;
+  }
+  const r=rangeFor(w);
+  state.minPts=r[0];
+  state.maxPts=r[1];
+  out.textContent=state.minPts+"–"+state.maxPts+" POINTS";
+  save();
+  update();
+}
+
 function ensureTodayLog(){
   const k=localDateKey();
   if(!state.foodLog[k]) state.foodLog[k]=[];
   return state.foodLog[k];
 }
+function foodTotalForDay(dateKey){
+  return (state.foodLog[dateKey]||[]).reduce((sum,x)=>sum+(+x.pts||0),0);
+}
 function addFoodLogEntry(nameOverride=null, ptsOverride=null){
   const name=(nameOverride!==null?nameOverride:document.getElementById('foodName').value).trim();
   const pts=+(ptsOverride!==null?ptsOverride:document.getElementById('foodLogPts').value);
-  if(!name || isNaN(pts) || pts<0) return;
+  if(!name || !Number.isFinite(pts) || pts<0) return;
   ensureTodayLog().push({name,pts});
-  state.used = foodTotalForDay(localDateKey());
+  state.used=foodTotalForDay(localDateKey());
   if(document.getElementById('foodName')) document.getElementById('foodName').value="";
   if(document.getElementById('foodLogPts')) document.getElementById('foodLogPts').value="";
   save(); update();
@@ -191,13 +214,10 @@ function removeFoodLogEntry(dateKey,index){
   if(dateKey===localDateKey()) state.used=foodTotalForDay(dateKey);
   save(); update();
 }
-function foodTotalForDay(dateKey){
-  return (state.foodLog[dateKey]||[]).reduce((sum,x)=>sum+(+x.pts||0),0);
-}
 function saveFavoriteFood(){
   const name=document.getElementById('favName').value.trim();
   const pts=+document.getElementById('favPts').value;
-  if(!name || isNaN(pts) || pts<0) return;
+  if(!name || !Number.isFinite(pts) || pts<0) return;
   const existing=state.favorites.findIndex(f=>f.name.toLowerCase()===name.toLowerCase());
   const item={name,pts};
   if(existing>=0) state.favorites[existing]=item; else state.favorites.push(item);
@@ -223,7 +243,7 @@ function renderFoodLog(){
 function renderFavorites(){
   const el=document.getElementById('favoritesList'); if(!el) return;
   if(!state.favorites.length){el.textContent="No favorites saved yet.";return;}
-  el.innerHTML=state.favorites.map((f,i)=>`<span class="favorite-chip" onclick="addFoodLogEntry(${JSON.stringify(f.name)},${f.pts})">${escapeHtml(f.name)} · ${f.pts}</span><button onclick="deleteFavoriteFood(${i})" style="width:auto;margin:2px 6px 2px 0;padding:5px 7px;background:#777;font-size:11px">×</button>`).join("");
+  el.innerHTML=state.favorites.map((f,i)=>`<span class="favorite-chip" onclick='addFoodLogEntry(${JSON.stringify(f.name)},${f.pts})'>${escapeHtml(f.name)} · ${f.pts}</span><button onclick="deleteFavoriteFood(${i})" style="width:auto;margin:2px 6px 2px 0;padding:5px 7px;background:#777;font-size:11px">×</button>`).join("");
 }
 function renderPreviousDays(){
   const el=document.getElementById('previousDays'); if(!el) return;
@@ -235,65 +255,64 @@ function renderPreviousDays(){
     return `<div style="padding:8px 0;border-bottom:1px solid #eee"><b>${k}</b> — ${foodTotalForDay(k)} POINTS<br>${items}</div>`;
   }).join("");
 }
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function renderHistory(){
+  const el=document.getElementById('history');
+  if(!el) return;
+  if(!state.history.length){el.textContent="No completed days recorded yet.";return;}
+  el.innerHTML=state.history.map(d=>`<div style="padding:7px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — ${d.used} used, ${d.bonus} activity, net ${d.net}</div>`).join("");
 }
-
 function update(){
- document.getElementById('minStat').textContent=state.minPts??"—";
- document.getElementById('maxStat').textContent=state.maxPts??"—";
- document.getElementById('usedStat').textContent=state.used;
- document.getElementById('bonusStat').textContent=state.bonus;
- document.getElementById('bankStat').textContent=state.bank;
- document.getElementById('remainStat').textContent=state.maxPts==null?"—":Math.max(0,state.maxPts+state.bonus-state.used);
- renderHistory();
- renderFoodLog();
- renderFavorites();
- renderPreviousDays();
+  document.getElementById('minStat').textContent=state.minPts??"—";
+  document.getElementById('maxStat').textContent=state.maxPts??"—";
+  document.getElementById('usedStat').textContent=state.used||0;
+  document.getElementById('bonusStat').textContent=state.bonus||0;
+  document.getElementById('bankStat').textContent=state.bank||0;
+  document.getElementById('remainStat').textContent=state.maxPts==null?"—":Math.max(0,state.maxPts+(state.bonus||0)-(state.used||0));
+  if(state.minPts!==null && state.maxPts!==null){
+    document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts+" POINTS";
+  }
+  renderHistory(); renderFoodLog(); renderFavorites(); renderPreviousDays();
 }
 function addFood(){
- state.used+=+document.getElementById('addPts').value||0;
- document.getElementById('addPts').value="";
- save();update();
+  state.used+=+document.getElementById('addPts').value||0;
+  document.getElementById('addPts').value="";
+  save(); update();
 }
 function addExercise(){
- const m=+document.getElementById('exercise').value||0;
- state.bonus+=Math.floor(m/20);
- document.getElementById('exercise').value="";
- save();update();
+  const m=+document.getElementById('exercise').value||0;
+  state.bonus+=Math.floor(m/20);
+  document.getElementById('exercise').value="";
+  save(); update();
 }
 function newDay(){
- const today=new Date().toISOString().slice(0,10);
- 
-if(state.foodLog && state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
-  state.used=foodTotalForDay(localDateKey());
-}
-
-if(state.minPts!==null){
-   const net=state.used-state.bonus;
-   state.bank=Math.max(0,state.bank+(state.maxPts-state.used+state.bonus));
-   state.history.unshift({date:today,used:state.used,bonus:state.bonus,net:net});
-   state.history=state.history.slice(0,14);
- }
- state.used=0;state.bonus=0;save();update();
+  const today=localDateKey();
+  if(state.minPts!==null){
+    const net=(state.used||0)-(state.bonus||0);
+    state.bank=Math.max(0,(state.bank||0)+(state.maxPts-(state.used||0)+(state.bonus||0)));
+    state.history.unshift({date:today,used:state.used||0,bonus:state.bonus||0,net});
+    state.history=state.history.slice(0,14);
+  }
+  state.used=0; state.bonus=0; save(); update();
 }
 function startWeek(){
- if(state.used>0||state.bonus>0)newDay();
- state.bank=0;state.history=[];state.weekStart=new Date().toISOString().slice(0,10);
- save();update();
+  if((state.used||0)>0||(state.bonus||0)>0)newDay();
+  state.bank=0; state.history=[]; state.weekStart=localDateKey();
+  save(); update();
 }
 function clearHistory(){
- if(confirm("Clear all saved weekly history?")){state.history=[];state.bank=0;save();update();}
+  if(confirm("Clear all saved weekly history?")){
+    state.history=[]; state.bank=0; save(); update();
+  }
 }
-function renderHistory(){
- const el=document.getElementById('history');
- if(!state.history.length){el.textContent="No completed days recorded yet.";return;}
- el.innerHTML=state.history.map(d=>`<div style="padding:7px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — ${d.used} used, ${d.bonus} activity, net ${d.net}</div>`).join("");
+
+if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
+  state.used=foodTotalForDay(localDateKey());
 }
-if(state.minPts!==null) document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts;
 update();
-if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
-let dp=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
 </script>
 </body>
 </html>

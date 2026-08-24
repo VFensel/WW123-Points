@@ -1,12 +1,5 @@
-# Classic WW POINTS Calculator – Food Log Update
+# Classic WW POINTS Calculator – v3 Fix
 
-Upload these files to the root of the existing GitHub repository, replacing the old files when prompted.
+This update fixes the Daily POINTS Target calculator while preserving the food log, favorites, previous-day history, and local storage.
 
-This version adds:
-- named food logging
-- automatic daily POINTS totals
-- previous-day history
-- favorite foods for one-tap reuse
-- local on-device storage
-
-After GitHub Pages redeploys, reopen the installed app. If the old version appears briefly, close and reopen it once after the site update completes.
+Upload all files to the root of the existing GitHub repository and replace the existing files.
