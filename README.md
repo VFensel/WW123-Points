@@ -1,14 +1,12 @@
-# Classic WW POINTS Calculator
+# Classic WW POINTS Calculator – Food Log Update
 
-GitHub Pages-ready package.
+Upload these files to the root of the existing GitHub repository, replacing the old files when prompted.
 
-Upload these files to the root of your GitHub repository:
-- index.html
-- manifest.json
-- sw.js
-- icon-192.png
-- icon-512.png
+This version adds:
+- named food logging
+- automatic daily POINTS totals
+- previous-day history
+- favorite foods for one-tap reuse
+- local on-device storage
 
-Then go to Settings > Pages, choose "Deploy from a branch", select the `main` branch and `/ (root)`, and save.
-
-Your personal tracker data stays in your browser/device local storage.
+After GitHub Pages redeploys, reopen the installed app. If the old version appears briefly, close and reopen it once after the site update completes.

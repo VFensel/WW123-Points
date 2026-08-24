@@ -19,6 +19,15 @@ button{background:#5b4b8a;color:#fff;border:0;font-weight:bold;margin-top:10px}.
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
 .stat{display:flex;justify-content:space-between;font-size:17px;padding:6px 0}
 .note{font-size:12px;color:#666;line-height:1.45}
+
+.food-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+.food-row .name{font-weight:600}
+.food-row .pts{min-width:48px;text-align:right}
+.food-row button{width:auto;margin:0;padding:7px 9px;font-size:12px;background:#777}
+.favorite-chip{display:inline-block;margin:4px;padding:8px 10px;border-radius:999px;background:#eee;cursor:pointer;font-size:13px}
+.favorite-chip:hover{background:#ddd}
+.log-total{font-size:22px;font-weight:bold;text-align:center;color:#5b4b8a;margin-top:10px}
+
 </style>
 </head>
 <body>
@@ -64,6 +73,46 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 <p class="note">The original patent describes 1 bonus POINT for each 20 minutes of moderate physical activity (examples include walking, dancing and canoeing). This simple tracker uses that documented example rather than pretending to reproduce later WW exercise formulas.</p>
 </section>
 
+
+<section class="card">
+<h2>Food Log</h2>
+<div class="grid">
+  <div>
+    <label>Food name</label>
+    <input id="foodName" type="text" placeholder="e.g. Honey chipotle salmon">
+  </div>
+  <div>
+    <label>POINTS</label>
+    <input id="foodLogPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
+  </div>
+</div>
+<button onclick="addFoodLogEntry()">Add to Today's Log</button>
+<div class="log-total">Today's total: <span id="foodLogTotal">0</span> POINTS</div>
+<div id="todayFoodLog" class="note" style="margin-top:10px">No foods logged yet.</div>
+</section>
+
+<section class="card">
+<h2>Favorite Foods</h2>
+<div class="grid">
+  <div>
+    <label>Favorite food name</label>
+    <input id="favName" type="text" placeholder="e.g. Yoplait Whips">
+  </div>
+  <div>
+    <label>POINTS</label>
+    <input id="favPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
+  </div>
+</div>
+<button onclick="saveFavoriteFood()">Save Favorite</button>
+<div id="favoritesList" class="note" style="margin-top:10px">No favorites saved yet.</div>
+<p class="note">Tap a favorite to add it directly to today's food log.</p>
+</section>
+
+<section class="card">
+<h2>Previous Days</h2>
+<div id="previousDays" class="note">No previous days saved yet.</div>
+</section>
+
 <section class="card">
 <h2>Weekly History</h2>
 <div id="history" class="note">No days recorded yet.</div>
@@ -89,8 +138,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 </section>
 </main>
 <script>
+if(!state.foodLog) state.foodLog={};
+if(!state.favorites) state.favorites=[];
+
 let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
- minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],weekStart:new Date().toISOString().slice(0,10)
+ minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],weekStart:new Date().toISOString().slice(0,10),foodLog:{},favorites:[]
 };
 function save(){localStorage.setItem("classicWWState",JSON.stringify(state));}
 function roundWW(x){return Math.floor(x+0.5);}
@@ -112,6 +164,81 @@ function dailyTarget(){
  document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts;
  save(); update();
 }
+
+function localDateKey(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function ensureTodayLog(){
+  const k=localDateKey();
+  if(!state.foodLog[k]) state.foodLog[k]=[];
+  return state.foodLog[k];
+}
+function addFoodLogEntry(nameOverride=null, ptsOverride=null){
+  const name=(nameOverride!==null?nameOverride:document.getElementById('foodName').value).trim();
+  const pts=+(ptsOverride!==null?ptsOverride:document.getElementById('foodLogPts').value);
+  if(!name || isNaN(pts) || pts<0) return;
+  ensureTodayLog().push({name,pts});
+  state.used = foodTotalForDay(localDateKey());
+  if(document.getElementById('foodName')) document.getElementById('foodName').value="";
+  if(document.getElementById('foodLogPts')) document.getElementById('foodLogPts').value="";
+  save(); update();
+}
+function removeFoodLogEntry(dateKey,index){
+  if(!state.foodLog[dateKey]) return;
+  state.foodLog[dateKey].splice(index,1);
+  if(dateKey===localDateKey()) state.used=foodTotalForDay(dateKey);
+  save(); update();
+}
+function foodTotalForDay(dateKey){
+  return (state.foodLog[dateKey]||[]).reduce((sum,x)=>sum+(+x.pts||0),0);
+}
+function saveFavoriteFood(){
+  const name=document.getElementById('favName').value.trim();
+  const pts=+document.getElementById('favPts').value;
+  if(!name || isNaN(pts) || pts<0) return;
+  const existing=state.favorites.findIndex(f=>f.name.toLowerCase()===name.toLowerCase());
+  const item={name,pts};
+  if(existing>=0) state.favorites[existing]=item; else state.favorites.push(item);
+  state.favorites.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('favName').value="";
+  document.getElementById('favPts').value="";
+  save(); update();
+}
+function deleteFavoriteFood(index){
+  state.favorites.splice(index,1);
+  save(); update();
+}
+function renderFoodLog(){
+  const key=localDateKey(), entries=state.foodLog[key]||[];
+  const total=foodTotalForDay(key);
+  const totalEl=document.getElementById('foodLogTotal');
+  if(totalEl) totalEl.textContent=Number.isInteger(total)?total:total.toFixed(1);
+  const el=document.getElementById('todayFoodLog');
+  if(!el) return;
+  if(!entries.length){el.textContent="No foods logged yet.";return;}
+  el.innerHTML=entries.map((x,i)=>`<div class="food-row"><span class="name">${escapeHtml(x.name)}</span><span class="pts">${x.pts} pt${x.pts==1?'':'s'}</span><button onclick="removeFoodLogEntry('${key}',${i})">Remove</button></div>`).join("");
+}
+function renderFavorites(){
+  const el=document.getElementById('favoritesList'); if(!el) return;
+  if(!state.favorites.length){el.textContent="No favorites saved yet.";return;}
+  el.innerHTML=state.favorites.map((f,i)=>`<span class="favorite-chip" onclick="addFoodLogEntry(${JSON.stringify(f.name)},${f.pts})">${escapeHtml(f.name)} · ${f.pts}</span><button onclick="deleteFavoriteFood(${i})" style="width:auto;margin:2px 6px 2px 0;padding:5px 7px;background:#777;font-size:11px">×</button>`).join("");
+}
+function renderPreviousDays(){
+  const el=document.getElementById('previousDays'); if(!el) return;
+  const today=localDateKey();
+  const days=Object.keys(state.foodLog).filter(k=>k!==today && state.foodLog[k].length).sort().reverse();
+  if(!days.length){el.textContent="No previous days saved yet.";return;}
+  el.innerHTML=days.slice(0,30).map(k=>{
+    const items=state.foodLog[k].map(x=>`${escapeHtml(x.name)} (${x.pts})`).join(", ");
+    return `<div style="padding:8px 0;border-bottom:1px solid #eee"><b>${k}</b> — ${foodTotalForDay(k)} POINTS<br>${items}</div>`;
+  }).join("");
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
 function update(){
  document.getElementById('minStat').textContent=state.minPts??"—";
  document.getElementById('maxStat').textContent=state.maxPts??"—";
@@ -120,6 +247,9 @@ function update(){
  document.getElementById('bankStat').textContent=state.bank;
  document.getElementById('remainStat').textContent=state.maxPts==null?"—":Math.max(0,state.maxPts+state.bonus-state.used);
  renderHistory();
+ renderFoodLog();
+ renderFavorites();
+ renderPreviousDays();
 }
 function addFood(){
  state.used+=+document.getElementById('addPts').value||0;
@@ -134,7 +264,12 @@ function addExercise(){
 }
 function newDay(){
  const today=new Date().toISOString().slice(0,10);
- if(state.minPts!==null){
+ 
+if(state.foodLog && state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
+  state.used=foodTotalForDay(localDateKey());
+}
+
+if(state.minPts!==null){
    const net=state.used-state.bonus;
    state.bank=Math.max(0,state.bank+(state.maxPts-state.used+state.bonus));
    state.history.unshift({date:today,used:state.used,bonus:state.bonus,net:net});
