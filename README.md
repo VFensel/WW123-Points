@@ -1,8 +1,8 @@
-# Classic WW POINTS Calculator – v4 Share Update
+# Classic WW POINTS Calculator — v5
 
-This update adds a Share App button.
-
-On supported phones, tapping Share App opens the phone's normal share sheet so the app can be sent by text, email, Messenger, etc.
-If the Web Share feature is unavailable, the app copies the public link to the clipboard instead.
-
-Upload all files to the root of the existing GitHub repository and replace the existing files.
+Updates:
+- Adds a Basic Food List dropdown under Favorite Foods.
+- Selecting a basic food fills its name and POINTS so it can be saved as a favorite.
+- Fixes favorite-food tapping so a favorite reliably adds directly to today’s Food Log.
+- Keeps Daily POINTS Target, Food Log, Previous Days, sharing, and saved browser data.
+- Cache bumped to v5 for installed-app updates.

@@ -106,6 +106,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 
 <section class="card">
 <h2>Favorite Foods</h2>
+<label>Choose from Basic Food List</label>
+<select id="basicFoodSelect" onchange="loadBasicFood()">
+  <option value="">-- Select a food --</option>
+</select>
+<p class="note">Selecting a food fills in the name and POINTS below. Tap Save Favorite if you want to keep it in your Favorites.</p>
 <div class="grid">
   <div>
     <label>Favorite food name</label>
@@ -253,10 +258,57 @@ function renderFoodLog(){
   if(!entries.length){el.textContent="No foods logged yet.";return;}
   el.innerHTML=entries.map((x,i)=>`<div class="food-row"><span class="name">${escapeHtml(x.name)}</span><span class="pts">${x.pts} pt${x.pts==1?'':'s'}</span><button onclick="removeFoodLogEntry('${key}',${i})">Remove</button></div>`).join("");
 }
+const BASIC_FOODS=[
+  ["Egg, large/medium (1)",2],
+  ["Brown 'N Serve sausage links (2)",3],
+  ["Brown 'N Serve sausage links (3)",5],
+  ["Bacon (2 slices)",2],
+  ["Whole-wheat toast (1 slice)",1],
+  ["Whole-wheat wrap (1)",2],
+  ["Yoplait Whips (1 cup)",3],
+  ["Planet Oat Dark Chocolate Oatmilk (8 oz)",3],
+  ["Banana, medium",2],
+  ["Apple, medium",1],
+  ["Avocado (1/4 medium)",2],
+  ["Garden salad, plain",0],
+  ["Hard-boiled egg (1)",2],
+  ["Zucchini, cooked (1 cup)",0],
+  ["Green beans (1 cup)",1],
+  ["Broccoli (1 1/2 cups)",1],
+  ["Baked potato, medium",2],
+  ["Quinoa, cooked (1/2 cup)",2],
+  ["Chicken breast, grilled (4 oz)",4],
+  ["Dark-meat chicken, skinless (4 oz)",5],
+  ["Cod / walleye / perch, plain (5-6 oz)",4],
+  ["Air-fried floured cod / walleye / perch (5-6 oz)",5],
+  ["Sea Cuisine Honey Chipotle Salmon (1 fillet)",5],
+  ["Lean beef (4 oz)",5],
+  ["Prosciutto (1 oz)",2],
+  ["Goldfish Spicy Dill Pickle Crisps (44 pieces / 30 g)",3],
+  ["Goldfish Spicy Dill Pickle Crisps (22 pieces)",2],
+  ["Anytime Egg Bites (2 bites)",5]
+];
+function populateBasicFoods(){
+  const sel=document.getElementById('basicFoodSelect'); if(!sel) return;
+  sel.innerHTML='<option value="">-- Select a food --</option>'+BASIC_FOODS.map((f,i)=>`<option value="${i}">${escapeHtml(f[0])} — ${f[1]} pt${f[1]===1?'':'s'}</option>`).join('');
+}
+function loadBasicFood(){
+  const sel=document.getElementById('basicFoodSelect');
+  if(!sel || sel.value==='') return;
+  const f=BASIC_FOODS[Number(sel.value)]; if(!f) return;
+  document.getElementById('favName').value=f[0];
+  document.getElementById('favPts').value=f[1];
+}
+function addFavoriteToToday(index){
+  const f=state.favorites[index]; if(!f) return;
+  addFoodLogEntry(String(f.name), Number(f.pts));
+}
 function renderFavorites(){
   const el=document.getElementById('favoritesList'); if(!el) return;
   if(!state.favorites.length){el.textContent="No favorites saved yet.";return;}
-  el.innerHTML=state.favorites.map((f,i)=>`<span class="favorite-chip" onclick='addFoodLogEntry(${JSON.stringify(f.name)},${f.pts})'>${escapeHtml(f.name)} · ${f.pts}</span><button onclick="deleteFavoriteFood(${i})" style="width:auto;margin:2px 6px 2px 0;padding:5px 7px;background:#777;font-size:11px">×</button>`).join("");
+  el.innerHTML=state.favorites.map((f,i)=>`<div class="food-row"><button type="button" class="favorite-chip" data-fav-index="${i}" style="width:auto;background:#eee;color:#222;margin:2px;padding:8px 10px">${escapeHtml(f.name)} · ${f.pts}</button><button type="button" data-delete-fav="${i}" style="width:auto;margin:2px 6px;padding:5px 7px;background:#777;font-size:11px">×</button></div>`).join("");
+  el.querySelectorAll('[data-fav-index]').forEach(btn=>btn.addEventListener('click',()=>addFavoriteToToday(Number(btn.dataset.favIndex))));
+  el.querySelectorAll('[data-delete-fav]').forEach(btn=>btn.addEventListener('click',()=>deleteFavoriteFood(Number(btn.dataset.deleteFav))));
 }
 function renderPreviousDays(){
   const el=document.getElementById('previousDays'); if(!el) return;
@@ -321,6 +373,7 @@ function clearHistory(){
 if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
   state.used=foodTotalForDay(localDateKey());
 }
+populateBasicFoods();
 update();
 
 
