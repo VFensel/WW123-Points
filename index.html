@@ -110,7 +110,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 <select id="basicFoodSelect" onchange="loadBasicFood()">
   <option value="">-- Select a food --</option>
 </select>
-<p class="note">Selecting a food fills in the name and POINTS below. Tap Save Favorite if you want to keep it in your Favorites.</p>
+<p class="note">Selecting a food fills in the name and POINTS below. Tap Save Favorite if you want to keep it in your Favorites. For foods shown as a POINTS range, the higher value is filled in automatically for conservative tracking.</p>
 <div class="grid">
   <div>
     <label>Favorite food name</label>
@@ -259,45 +259,117 @@ function renderFoodLog(){
   el.innerHTML=entries.map((x,i)=>`<div class="food-row"><span class="name">${escapeHtml(x.name)}</span><span class="pts">${x.pts} pt${x.pts==1?'':'s'}</span><button onclick="removeFoodLogEntry('${key}',${i})">Remove</button></div>`).join("");
 }
 const BASIC_FOODS=[
-  ["Egg, large/medium (1)",2],
-  ["Brown 'N Serve sausage links (2)",3],
-  ["Brown 'N Serve sausage links (3)",5],
-  ["Bacon (2 slices)",2],
-  ["Whole-wheat toast (1 slice)",1],
-  ["Whole-wheat wrap (1)",2],
-  ["Yoplait Whips (1 cup)",3],
-  ["Planet Oat Dark Chocolate Oatmilk (8 oz)",3],
-  ["Banana, medium",2],
-  ["Apple, medium",1],
-  ["Avocado (1/4 medium)",2],
-  ["Garden salad, plain",0],
-  ["Hard-boiled egg (1)",2],
-  ["Zucchini, cooked (1 cup)",0],
-  ["Green beans (1 cup)",1],
-  ["Broccoli (1 1/2 cups)",1],
-  ["Baked potato, medium",2],
-  ["Quinoa, cooked (1/2 cup)",2],
-  ["Chicken breast, grilled (4 oz)",4],
-  ["Dark-meat chicken, skinless (4 oz)",5],
-  ["Cod / walleye / perch, plain (5-6 oz)",4],
-  ["Air-fried floured cod / walleye / perch (5-6 oz)",5],
-  ["Sea Cuisine Honey Chipotle Salmon (1 fillet)",5],
-  ["Lean beef (4 oz)",5],
-  ["Prosciutto (1 oz)",2],
-  ["Goldfish Spicy Dill Pickle Crisps (44 pieces / 30 g)",3],
-  ["Goldfish Spicy Dill Pickle Crisps (22 pieces)",2],
-  ["Anytime Egg Bites (2 bites)",5]
+  // Meat, Poultry & Fish
+  {cat:"🥩 Meat, Poultry & Fish",food:"Chicken breast, skinless",serving:"3 oz",label:"3",pts:3},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Chicken breast, skinless",serving:"4 oz",label:"4",pts:4},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Turkey breast, lean",serving:"3 oz",label:"2",pts:2},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Lean ground turkey",serving:"4 oz",label:"4",pts:4},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Lean ground beef",serving:"3 oz",label:"4",pts:4},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Lean beef",serving:"4 oz",label:"5",pts:5},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Pork chop",serving:"5 oz",label:"6",pts:6},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Lamb, lean",serving:"4 oz",label:"~5–6",pts:6},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Salmon",serving:"5 oz",label:"7",pts:7},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Tuna, water-packed",serving:"3 oz",label:"2",pts:2},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Shrimp",serving:"3 oz",label:"2",pts:2},
+  {cat:"🥩 Meat, Poultry & Fish",food:"Ham",serving:"3 oz",label:"3",pts:3},
+
+  // Eggs & Dairy
+  {cat:"🍳 Eggs & Dairy",food:"Egg",serving:"1 large",label:"2",pts:2},
+  {cat:"🍳 Eggs & Dairy",food:"Eggs",serving:"2 large",label:"4",pts:4},
+  {cat:"🍳 Eggs & Dairy",food:"Nonfat yogurt",serving:"1 cup",label:"~2",pts:2},
+  {cat:"🍳 Eggs & Dairy",food:"Low-fat yogurt",serving:"1 container",label:"~2–3",pts:3},
+  {cat:"🍳 Eggs & Dairy",food:"Cheddar cheese",serving:"1 oz",label:"3",pts:3},
+  {cat:"🍳 Eggs & Dairy",food:"Parmesan",serving:"2 Tbsp",label:"1",pts:1},
+  {cat:"🍳 Eggs & Dairy",food:"Milk, skim",serving:"1 cup",label:"2",pts:2},
+  {cat:"🍳 Eggs & Dairy",food:"Milk, 2%",serving:"1 cup",label:"4",pts:4},
+  {cat:"🍳 Eggs & Dairy",food:"Milk, whole",serving:"1 cup",label:"5",pts:5},
+
+  // Bread, Grains & Starches
+  {cat:"🍞 Bread, Grains & Starches",food:"Whole-wheat bread",serving:"1 slice",label:"1",pts:1},
+  {cat:"🍞 Bread, Grains & Starches",food:"Whole-wheat bread",serving:"2 slices",label:"3",pts:3},
+  {cat:"🍞 Bread, Grains & Starches",food:"Dinner roll, small",serving:"1",label:"2",pts:2},
+  {cat:"🍞 Bread, Grains & Starches",food:"Oatmeal, cooked",serving:"1 cup",label:"2",pts:2},
+  {cat:"🍞 Bread, Grains & Starches",food:"Quinoa, cooked",serving:"½ cup",label:"~2",pts:2},
+  {cat:"🍞 Bread, Grains & Starches",food:"Quinoa, cooked",serving:"1 cup",label:"~4",pts:4},
+  {cat:"🍞 Bread, Grains & Starches",food:"White rice, cooked",serving:"1 cup",label:"4",pts:4},
+  {cat:"🍞 Bread, Grains & Starches",food:"Brown rice, cooked",serving:"1 cup",label:"~4",pts:4},
+  {cat:"🍞 Bread, Grains & Starches",food:"Pasta, cooked",serving:"1 cup",label:"4",pts:4},
+  {cat:"🍞 Bread, Grains & Starches",food:"Pasta, cooked",serving:"1½ cups",label:"6",pts:6},
+  {cat:"🍞 Bread, Grains & Starches",food:"Baked potato",serving:"1 medium",label:"2",pts:2},
+  {cat:"🍞 Bread, Grains & Starches",food:"Sweet potato",serving:"1 medium",label:"1",pts:1},
+  {cat:"🍞 Bread, Grains & Starches",food:"Taco shell",serving:"1",label:"~1–2",pts:2},
+  {cat:"🍞 Bread, Grains & Starches",food:"Potato chips",serving:"1 oz",label:"4",pts:4},
+
+  // Vegetables
+  {cat:"🥦 Vegetables",food:"Broccoli",serving:"1½ cups",label:"1",pts:1},
+  {cat:"🥦 Vegetables",food:"Green beans",serving:"1 cup",label:"1",pts:1},
+  {cat:"🥦 Vegetables",food:"Asparagus",serving:"1½ cups",label:"0–1",pts:1},
+  {cat:"🥦 Vegetables",food:"Lettuce",serving:"2 cups",label:"0",pts:0},
+  {cat:"🥦 Vegetables",food:"Tomato",serving:"1 medium",label:"0",pts:0},
+  {cat:"🥦 Vegetables",food:"Cucumber",serving:"1 cup",label:"0",pts:0},
+  {cat:"🥦 Vegetables",food:"Onion",serving:"½ cup",label:"0",pts:0},
+  {cat:"🥦 Vegetables",food:"Bell pepper",serving:"1 cup",label:"0",pts:0},
+  {cat:"🥦 Vegetables",food:"Carrots",serving:"1 cup",label:"~1",pts:1},
+  {cat:"🥦 Vegetables",food:"Corn",serving:"½ cup",label:"~2",pts:2},
+  {cat:"🥦 Vegetables",food:"Peas",serving:"½ cup",label:"~2",pts:2},
+  {cat:"🥦 Vegetables",food:"Beans, cooked",serving:"½ cup",label:"~2",pts:2},
+
+  // Fruit
+  {cat:"🍎 Fruit",food:"Apple",serving:"1 medium",label:"1",pts:1},
+  {cat:"🍎 Fruit",food:"Banana",serving:"1 medium",label:"2",pts:2},
+  {cat:"🍎 Fruit",food:"Orange",serving:"1 medium",label:"1",pts:1},
+  {cat:"🍎 Fruit",food:"Pear",serving:"1 medium",label:"1",pts:1},
+  {cat:"🍎 Fruit",food:"Peach",serving:"1 medium",label:"1",pts:1},
+  {cat:"🍎 Fruit",food:"Strawberries",serving:"1 cup",label:"0–1",pts:1},
+  {cat:"🍎 Fruit",food:"Blueberries",serving:"1 cup",label:"~1",pts:1},
+  {cat:"🍎 Fruit",food:"Grapes",serving:"1 cup",label:"~2",pts:2},
+  {cat:"🍎 Fruit",food:"Applesauce, unsweetened",serving:"½ cup",label:"~1",pts:1},
+
+  // Nuts, Fats & Condiments
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Almonds",serving:"1 oz",label:"4",pts:4},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Peanuts",serving:"1 oz",label:"4",pts:4},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Peanut butter",serving:"1 Tbsp",label:"2",pts:2},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Avocado",serving:"¼ medium",label:"~2",pts:2},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Olive oil",serving:"1 tsp",label:"1",pts:1},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Butter",serving:"1 tsp",label:"1",pts:1},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Light mayonnaise",serving:"1 Tbsp",label:"~2",pts:2},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Regular mayonnaise",serving:"1 Tbsp",label:"~3",pts:3},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Salad dressing",serving:"1 Tbsp",label:"~2",pts:2},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Mustard",serving:"1 Tbsp",label:"0",pts:0},
+  {cat:"🥜 Nuts, Fats & Condiments",food:"Salsa",serving:"¼ cup",label:"0",pts:0},
+
+  // Treats & Extras
+  {cat:"🍨 Treats & Extras",food:"Ice cream",serving:"½ cup",label:"~3",pts:3},
+  {cat:"🍨 Treats & Extras",food:"Light ice cream",serving:"½ cup",label:"~2–3",pts:3},
+  {cat:"🍨 Treats & Extras",food:"Small cookie",serving:"1",label:"~2",pts:2},
+  {cat:"🍨 Treats & Extras",food:"Chocolate",serving:"1 oz",label:"~4",pts:4},
+  {cat:"🍨 Treats & Extras",food:"Popcorn, air-popped",serving:"3 cups",label:"~2",pts:2},
+  {cat:"🍨 Treats & Extras",food:"Pretzels",serving:"1 oz",label:"~3",pts:3},
+  {cat:"🍨 Treats & Extras",food:"Crackers",serving:"5–6",label:"~2–3",pts:3}
 ];
 function populateBasicFoods(){
   const sel=document.getElementById('basicFoodSelect'); if(!sel) return;
-  sel.innerHTML='<option value="">-- Select a food --</option>'+BASIC_FOODS.map((f,i)=>`<option value="${i}">${escapeHtml(f[0])} — ${f[1]} pt${f[1]===1?'':'s'}</option>`).join('');
+  sel.innerHTML='<option value="">-- Select a food --</option>';
+  let currentCat=null, group=null;
+  BASIC_FOODS.forEach((f,i)=>{
+    if(f.cat!==currentCat){
+      currentCat=f.cat;
+      group=document.createElement('optgroup');
+      group.label=currentCat;
+      sel.appendChild(group);
+    }
+    const opt=document.createElement('option');
+    opt.value=i;
+    opt.textContent=`${f.food} — ${f.serving} — ${f.label} pt${f.label==='1'?'':'s'}`;
+    group.appendChild(opt);
+  });
 }
 function loadBasicFood(){
   const sel=document.getElementById('basicFoodSelect');
   if(!sel || sel.value==='') return;
   const f=BASIC_FOODS[Number(sel.value)]; if(!f) return;
-  document.getElementById('favName').value=f[0];
-  document.getElementById('favPts').value=f[1];
+  document.getElementById('favName').value=`${f.food} (${f.serving})`;
+  document.getElementById('favPts').value=f.pts;
 }
 function addFavoriteToToday(index){
   const f=state.favorites[index]; if(!f) return;
