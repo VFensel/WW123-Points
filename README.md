@@ -14,3 +14,9 @@ Updates:
 - Fixed **New Day** so it closes the current day, saves the food entries to Previous Days, and clears Today's Tracker/Food Log for a fresh day.
 - Added **Edit** to every item in Today's Food Log so the food name or POINTS value can be corrected without deleting and re-entering it.
 - Bumped the service-worker cache to v7 so installed apps receive the update.
+
+## v8 update
+- Previous Days can now be edited.
+- Add a missed food item directly to yesterday or another prior day.
+- Edit or remove individual foods from a prior day.
+- Prior-day totals recalculate automatically, including matching history/bank adjustments when available.

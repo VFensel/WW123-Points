@@ -402,16 +402,105 @@ function renderFavorites(){
   el.querySelectorAll('[data-fav-index]').forEach(btn=>btn.addEventListener('click',()=>addFavoriteToToday(Number(btn.dataset.favIndex))));
   el.querySelectorAll('[data-delete-fav]').forEach(btn=>btn.addEventListener('click',()=>deleteFavoriteFood(Number(btn.dataset.deleteFav))));
 }
+function syncHistoryForDate(dateKey,newTotal,oldTotal){
+  const h=state.history.find(x=>x.date===dateKey);
+  if(h){
+    const delta=newTotal-oldTotal;
+    h.used=newTotal;
+    h.net=newTotal-(h.bonus||0);
+    state.bank=Math.max(0,(state.bank||0)-delta);
+  }
+}
+function addToCompletedDay(index){
+  const d=state.completedLogs && state.completedLogs[index];
+  if(!d) return;
+  const name=prompt("Food to add to "+d.date+":","");
+  if(name===null || !name.trim()) return;
+  const ptsText=prompt("POINTS for "+name.trim()+":","");
+  if(ptsText===null) return;
+  const pts=Number(ptsText);
+  if(!Number.isFinite(pts) || pts<0){alert("Please enter a valid POINTS number.");return;}
+  const oldTotal=Number(d.total)||0;
+  if(!d.items) d.items=[];
+  d.items.push({name:name.trim(),pts});
+  d.total=d.items.reduce((sum,x)=>sum+(+x.pts||0),0);
+  syncHistoryForDate(d.date,d.total,oldTotal);
+  save();update();
+}
+function editCompletedDayItem(dayIndex,itemIndex){
+  const d=state.completedLogs && state.completedLogs[dayIndex];
+  const item=d && d.items && d.items[itemIndex];
+  if(!item) return;
+  const name=prompt("Edit food name:",item.name);
+  if(name===null || !name.trim()) return;
+  const ptsText=prompt("Edit POINTS:",item.pts);
+  if(ptsText===null) return;
+  const pts=Number(ptsText);
+  if(!Number.isFinite(pts) || pts<0){alert("Please enter a valid POINTS number.");return;}
+  const oldTotal=Number(d.total)||0;
+  item.name=name.trim(); item.pts=pts;
+  d.total=d.items.reduce((sum,x)=>sum+(+x.pts||0),0);
+  syncHistoryForDate(d.date,d.total,oldTotal);
+  save();update();
+}
+function removeCompletedDayItem(dayIndex,itemIndex){
+  const d=state.completedLogs && state.completedLogs[dayIndex];
+  if(!d || !d.items || !d.items[itemIndex]) return;
+  if(!confirm("Remove this item from "+d.date+"?")) return;
+  const oldTotal=Number(d.total)||0;
+  d.items.splice(itemIndex,1);
+  d.total=d.items.reduce((sum,x)=>sum+(+x.pts||0),0);
+  syncHistoryForDate(d.date,d.total,oldTotal);
+  save();update();
+}
+function addToPastFoodLog(dateKey){
+  const name=prompt("Food to add to "+dateKey+":","");
+  if(name===null || !name.trim()) return;
+  const ptsText=prompt("POINTS for "+name.trim()+":","");
+  if(ptsText===null) return;
+  const pts=Number(ptsText);
+  if(!Number.isFinite(pts) || pts<0){alert("Please enter a valid POINTS number.");return;}
+  if(!state.foodLog[dateKey]) state.foodLog[dateKey]=[];
+  const oldTotal=foodTotalForDay(dateKey);
+  state.foodLog[dateKey].push({name:name.trim(),pts});
+  const newTotal=foodTotalForDay(dateKey);
+  syncHistoryForDate(dateKey,newTotal,oldTotal);
+  save();update();
+}
+function editPastFoodLogItem(dateKey,index){
+  const item=state.foodLog[dateKey] && state.foodLog[dateKey][index];
+  if(!item) return;
+  const name=prompt("Edit food name:",item.name);
+  if(name===null || !name.trim()) return;
+  const ptsText=prompt("Edit POINTS:",item.pts);
+  if(ptsText===null) return;
+  const pts=Number(ptsText);
+  if(!Number.isFinite(pts) || pts<0){alert("Please enter a valid POINTS number.");return;}
+  const oldTotal=foodTotalForDay(dateKey);
+  item.name=name.trim(); item.pts=pts;
+  const newTotal=foodTotalForDay(dateKey);
+  syncHistoryForDate(dateKey,newTotal,oldTotal);
+  save();update();
+}
+function removePastFoodLogItem(dateKey,index){
+  if(!state.foodLog[dateKey] || !state.foodLog[dateKey][index]) return;
+  if(!confirm("Remove this item from "+dateKey+"?")) return;
+  const oldTotal=foodTotalForDay(dateKey);
+  state.foodLog[dateKey].splice(index,1);
+  const newTotal=foodTotalForDay(dateKey);
+  syncHistoryForDate(dateKey,newTotal,oldTotal);
+  save();update();
+}
 function renderPreviousDays(){
   const el=document.getElementById('previousDays'); if(!el) return;
   const today=localDateKey();
   const saved=(state.completedLogs||[]).map((d,i)=>({
     sortKey:d.completedAt||d.date,
-    html:`<div style="padding:8px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — ${d.total} POINTS<br>${(d.items||[]).map(x=>`${escapeHtml(x.name)} (${x.pts})`).join(", ")}</div>`
+    html:`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — <b>${d.total} POINTS</b><br>${(d.items||[]).map((x,j)=>`<div class="food-row"><span class="name">${escapeHtml(x.name)}</span><span class="pts">${x.pts} pt${x.pts==1?'':'s'}</span><span><button onclick="editCompletedDayItem(${i},${j})">Edit</button><button onclick="removeCompletedDayItem(${i},${j})">Remove</button></span></div>`).join("")}<button type="button" style="margin-top:7px" onclick="addToCompletedDay(${i})">+ Add Item to This Day</button></div>`
   }));
   const dated=Object.keys(state.foodLog).filter(k=>k!==today && state.foodLog[k].length).map(k=>({
     sortKey:k,
-    html:`<div style="padding:8px 0;border-bottom:1px solid #eee"><b>${k}</b> — ${foodTotalForDay(k)} POINTS<br>${state.foodLog[k].map(x=>`${escapeHtml(x.name)} (${x.pts})`).join(", ")}</div>`
+    html:`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${k}</b> — <b>${foodTotalForDay(k)} POINTS</b><br>${state.foodLog[k].map((x,j)=>`<div class="food-row"><span class="name">${escapeHtml(x.name)}</span><span class="pts">${x.pts} pt${x.pts==1?'':'s'}</span><span><button onclick="editPastFoodLogItem('${k}',${j})">Edit</button><button onclick="removePastFoodLogItem('${k}',${j})">Remove</button></span></div>`).join("")}<button type="button" style="margin-top:7px" onclick="addToPastFoodLog('${k}')">+ Add Item to This Day</button></div>`
   }));
   const all=saved.concat(dated).sort((a,b)=>String(b.sortKey).localeCompare(String(a.sortKey)));
   if(!all.length){el.textContent="No previous days saved yet.";return;}
