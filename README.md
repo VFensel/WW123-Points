@@ -20,3 +20,13 @@ Updates:
 - Add a missed food item directly to yesterday or another prior day.
 - Edit or remove individual foods from a prior day.
 - Prior-day totals recalculate automatically, including matching history/bank adjustments when available.
+
+
+## v9 Restaurant POINTS update
+- Added Restaurant POINTS for McDonald’s, Wendy’s, Taco Bell, Arby’s, KFC, Subway, Pizza Hut, Culver’s, Burger King and Dairy Queen.
+- Restaurant search, quantity selector, combined classic-POINTS calculation before rounding, and Add Today button.
+- Values are calculated with the classic calories/fat/fiber formula from published nutrition references; restaurant recipes can change.
+
+
+## v10 update
+- Moved the Share App button to the bottom of the app page.

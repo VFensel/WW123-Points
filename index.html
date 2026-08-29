@@ -33,6 +33,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 .share-card button{font-size:16px}
 .share-status{margin-top:10px;font-size:13px;color:#666}
 
+.restaurant-row{padding:10px 0;border-bottom:1px solid #eee}.restaurant-title{font-weight:bold}.restaurant-meta{font-size:12px;color:#666;margin-top:3px}.qty-row{display:grid;grid-template-columns:1fr 80px 110px;gap:7px;align-items:end}.qty-row input{padding:9px}.qty-row button{margin-top:0;padding:9px}
 </style>
 </head>
 <body>
@@ -42,7 +43,6 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 <section class="card share-card">
 <h2>Share This App</h2>
 <p class="note">Send the Classic WW POINTS calculator to a friend or family member.</p>
-<button onclick="shareApp()">Share App</button>
 <div id="shareStatus" class="share-status"></div>
 </section>
 
@@ -127,6 +127,18 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 </section>
 
 <section class="card">
+<h2>Restaurant POINTS</h2>
+<label>Choose Restaurant</label>
+<select id="restaurantSelect" onchange="renderRestaurantMenu()">
+  <option value="">-- Select a restaurant --</option>
+</select>
+<label style="margin-top:10px">Search menu</label>
+<input id="restaurantSearch" type="text" placeholder="e.g. nuggets, fries, taco" oninput="renderRestaurantMenu()">
+<div id="restaurantMenu" class="note" style="margin-top:10px">Choose a restaurant to see menu items.</div>
+<p class="note">Restaurant POINTS use the classic calories + fat + fiber formula from published nutrition information. Menus and recipes can change, so values are a practical reference rather than current WeightWatchers values.</p>
+</section>
+
+<section class="card">
 <h2>Previous Days</h2>
 <div id="previousDays" class="note">No previous days saved yet.</div>
 </section>
@@ -154,6 +166,12 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;borde
 <h2>Important</h2>
 <p class="note">This is a historical recreation for personal reference, not the current WeightWatchers program and not medical advice. The underlying patent specifies the classic formula and daily ranges. WW programs changed over time.</p>
 </section>
+
+<section class="card">
+  <h2>Share App</h2>
+  <button onclick="shareApp()">Share App</button>
+</section>
+
 </main>
 <script>
 let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
@@ -174,6 +192,48 @@ function localDateKey(){
   const d=new Date();
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
+}
+
+const restaurantFoods={
+"McDonald's":[
+ {n:"Hamburger",c:250,f:9,fi:1},{n:"Cheeseburger",c:300,f:13,fi:2},{n:"McDouble",c:390,f:20,fi:2},{n:"Double Cheeseburger",c:450,f:24,fi:2},{n:"Quarter Pounder with Cheese",c:520,f:26,fi:2},{n:"Big Mac",c:590,f:34,fi:3},{n:"McChicken",c:400,f:21,fi:1},{n:"Filet-O-Fish",c:380,f:18,fi:2},{n:"Chicken McNuggets - 4 pc",c:170,f:10,fi:0},{n:"Chicken McNuggets - 6 pc",c:250,f:14,fi:0},{n:"Chicken McNuggets - 10 pc",c:410,f:24,fi:0},{n:"Fries - Small",c:230,f:11,fi:3},{n:"Fries - Medium",c:320,f:15,fi:4},{n:"Fries - Large",c:480,f:23,fi:6},{n:"Sweet 'N Sour Sauce",c:50,f:0,fi:0},{n:"Tangy Barbeque Sauce",c:45,f:0,fi:0}],
+"Wendy's":[
+ {n:"Jr. Hamburger",c:250,f:11,fi:1},{n:"Jr. Cheeseburger",c:290,f:14,fi:1},{n:"Dave's Single",c:590,f:37,fi:3},{n:"Dave's Double",c:850,f:56,fi:3},{n:"Crispy Chicken Sandwich",c:330,f:16,fi:1},{n:"Spicy Chicken Sandwich",c:490,f:20,fi:2},{n:"Chicken Nuggets - 4 pc",c:170,f:11,fi:0},{n:"Chicken Nuggets - 6 pc",c:250,f:16,fi:0},{n:"Chicken Nuggets - 10 pc",c:420,f:27,fi:0},{n:"Natural-Cut Fries - Small",c:260,f:12,fi:3},{n:"Natural-Cut Fries - Medium",c:350,f:16,fi:4},{n:"Chili - Small",c:240,f:11,fi:6},{n:"Plain Baked Potato",c:270,f:0,fi:7}],
+"Taco Bell":[
+ {n:"Crunchy Taco",c:170,f:9,fi:3},{n:"Soft Taco - Beef",c:180,f:9,fi:3},{n:"Crunchy Taco Supreme",c:190,f:11,fi:3},{n:"Bean Burrito",c:360,f:9,fi:8},{n:"Beefy 5-Layer Burrito",c:490,f:18,fi:7},{n:"Cheesy Bean & Rice Burrito",c:420,f:17,fi:6},{n:"Chicken Quesadilla",c:510,f:26,fi:4},{n:"Cheese Quesadilla",c:470,f:25,fi:4},{n:"Nachos BellGrande",c:740,f:38,fi:13},{n:"Cheesy Fiesta Potatoes",c:240,f:13,fi:3},{n:"Cinnamon Twists",c:170,f:6,fi:1}],
+"Arby's":[
+ {n:"Classic Roast Beef",c:360,f:14,fi:2},{n:"Double Roast Beef",c:510,f:24,fi:2},{n:"Classic Beef 'N Cheddar",c:450,f:20,fi:2},{n:"Crispy Chicken Sandwich",c:530,f:25,fi:3},{n:"Curly Fries - Small",c:410,f:22,fi:4},{n:"Curly Fries - Medium",c:550,f:29,fi:6},{n:"Crinkle Fries - Small",c:390,f:18,fi:4},{n:"Mozzarella Sticks - 4 pc",c:440,f:23,fi:2},{n:"Jalapeno Bites - 5 pc",c:290,f:17,fi:2}],
+"KFC":[
+ {n:"Original Recipe Chicken Breast",c:390,f:21,fi:0},{n:"Original Recipe Chicken Drumstick",c:130,f:8,fi:0},{n:"Original Recipe Chicken Thigh",c:280,f:19,fi:0},{n:"Original Recipe Chicken Wing",c:130,f:8,fi:0},{n:"Extra Crispy Chicken Breast",c:510,f:33,fi:1},{n:"Chicken Nuggets - 8 pc",c:280,f:18,fi:0},{n:"Mashed Potatoes with Gravy",c:130,f:4,fi:1},{n:"Cole Slaw",c:170,f:12,fi:2},{n:"Biscuit",c:180,f:8,fi:1},{n:"Secret Recipe Fries - Individual",c:320,f:15,fi:4},{n:"Mac & Cheese - Individual",c:140,f:6,fi:1}],
+"Subway":[
+ {n:"6-inch Turkey Breast",c:280,f:4,fi:5},{n:"6-inch Black Forest Ham",c:280,f:4,fi:5},{n:"6-inch Oven-Roasted Chicken",c:320,f:5,fi:5},{n:"6-inch Tuna",c:510,f:28,fi:5},{n:"6-inch Meatball Marinara",c:460,f:18,fi:7},{n:"6-inch Italian B.M.T.",c:410,f:17,fi:5},{n:"6-inch Veggie Delite",c:210,f:3,fi:5},{n:"Footlong Turkey Breast",c:560,f:8,fi:10},{n:"Chocolate Chip Cookie",c:210,f:10,fi:1}],
+"Pizza Hut":[
+ {n:"Large Hand Tossed Cheese - 1 slice",c:290,f:10,fi:2},{n:"Large Hand Tossed Pepperoni - 1 slice",c:300,f:13,fi:2},{n:"Large Thin 'N Crispy Cheese - 1 slice",c:230,f:10,fi:2},{n:"Large Thin 'N Crispy Pepperoni - 1 slice",c:250,f:12,fi:2},{n:"Large Original Pan Cheese - 1 slice",c:350,f:17,fi:2},{n:"Large Original Pan Pepperoni - 1 slice",c:380,f:20,fi:2},{n:"Breadsticks - 1 stick",c:140,f:5,fi:1},{n:"Cinnamon Sticks - 2 sticks",c:160,f:5,fi:1}],
+"Culver's":[
+ {n:"ButterBurger - Single",c:390,f:17,fi:1},{n:"ButterBurger Cheese - Single",c:460,f:23,fi:1},{n:"ButterBurger Cheese - Double",c:700,f:42,fi:1},{n:"Original Chicken Tenders - 2 pc",c:270,f:12,fi:1},{n:"Original Chicken Tenders - 4 pc",c:540,f:24,fi:2},{n:"Crinkle Cut Fries - Small",c:240,f:9,fi:3},{n:"Crinkle Cut Fries - Regular",c:360,f:14,fi:4},{n:"Wisconsin Cheese Curds - Small",c:510,f:25,fi:1},{n:"Mashed Potatoes & Gravy - Regular",c:130,f:4,fi:2},{n:"Vanilla Dish - 1 scoop",c:310,f:18,fi:0}],
+"Burger King":[
+ {n:"Hamburger",c:250,f:10,fi:1},{n:"Cheeseburger",c:290,f:13,fi:1},{n:"Whopper",c:670,f:41,fi:3},{n:"Whopper Jr.",c:330,f:19,fi:2},{n:"Original Chicken Sandwich",c:680,f:39,fi:3},{n:"Chicken Nuggets - 4 pc",c:190,f:12,fi:1},{n:"Chicken Nuggets - 8 pc",c:380,f:24,fi:1},{n:"French Fries - Small",c:300,f:13,fi:3},{n:"French Fries - Medium",c:370,f:17,fi:4},{n:"Onion Rings - Small",c:280,f:13,fi:3}],
+"Dairy Queen":[
+ {n:"Hamburger",c:320,f:13,fi:1},{n:"Hot Dog",c:330,f:19,fi:1},{n:"Chicken Strips - 2 pc",c:280,f:13,fi:1},{n:"Chicken Strips - 3 pc",c:430,f:20,fi:2},{n:"Fries - Kids",c:170,f:8,fi:2},{n:"Wild Alaskan Fish Sandwich",c:420,f:16,fi:1},{n:"BBQ Sandwich",c:280,f:7,fi:2},{n:"Corn Dog",c:240,f:13,fi:2},{n:"BBQ Dipping Sauce Cup",c:90,f:0,fi:1},{n:"Mini Butterfinger Blizzard",c:350,f:12,fi:1},{n:"Small Butterfinger Blizzard",c:590,f:21,fi:1}]
+};
+function classicPoints(c,f,fi){return roundWW(c/50+f/12-Math.min(fi||0,4)/5);}
+function restaurantPoints(item,qty){qty=Math.max(1,qty||1);return classicPoints(item.c*qty,item.f*qty,item.fi*qty);}
+function initRestaurants(){
+ const sel=document.getElementById('restaurantSelect'); if(!sel)return;
+ Object.keys(restaurantFoods).forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+}
+function renderRestaurantMenu(){
+ const sel=document.getElementById('restaurantSelect'), el=document.getElementById('restaurantMenu'); if(!sel||!el)return;
+ const r=sel.value, q=(document.getElementById('restaurantSearch').value||'').toLowerCase();
+ if(!r){el.textContent='Choose a restaurant to see menu items.';return;}
+ const foods=restaurantFoods[r].filter(x=>x.n.toLowerCase().includes(q));
+ if(!foods.length){el.textContent='No matching menu items.';return;}
+ el.innerHTML=foods.map((x,i)=>{const idx=restaurantFoods[r].indexOf(x),p=restaurantPoints(x,1);return `<div class="restaurant-row"><div class="restaurant-title">${escapeHtml(x.n)} — ${p} POINT${p===1?'':'S'}</div><div class="restaurant-meta">${x.c} cal · ${x.f}g fat · ${x.fi}g fiber</div><div class="qty-row"><label>Quantity<input id="rq_${idx}" type="number" min="1" step="1" value="1" oninput="updateRestaurantQty('${escapeHtml(r)}',${idx})"></label><b id="rp_${idx}">${p} pts</b><button type="button" onclick="addRestaurantFood('${escapeHtml(r)}',${idx})">Add Today</button></div></div>`}).join('');
+}
+function updateRestaurantQty(r,idx){const x=restaurantFoods[r][idx],q=Math.max(1,parseInt(document.getElementById('rq_'+idx).value)||1),p=restaurantPoints(x,q);document.getElementById('rp_'+idx).textContent=p+' pts';}
+function addRestaurantFood(r,idx){
+ const x=restaurantFoods[r][idx], q=Math.max(1,parseInt(document.getElementById('rq_'+idx).value)||1), p=restaurantPoints(x,q);
+ addFoodLogEntry(`${r} - ${x.n}${q>1?' x'+q:''}`,p);
 }
 
 function foodPoints(){
@@ -576,6 +636,7 @@ if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
   state.used=foodTotalForDay(localDateKey());
 }
 populateBasicFoods();
+initRestaurants();
 update();
 
 
