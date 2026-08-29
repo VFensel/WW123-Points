@@ -41,3 +41,9 @@ Updates:
 - Moved Share This App to a bordered button at the bottom.
 - Added a fixed bottom navigation bar for Calculator, Food Log, Favorites, and History.
 - Preserved all v10 tracking, editing, restaurant, and previous-day functionality.
+
+
+## v12 history fix
+- Fixed Weekly History so it uses the same saved-day data as Previous Days.
+- Weekly History now shows the same completed days and food entries instead of relying only on the older summary-only history array.
+- Weekly POINTS bank and activity/net information are still shown when available.
