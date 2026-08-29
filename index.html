@@ -7,172 +7,390 @@
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <title>Classic WW POINTS Calculator</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f2f8;color:#222}
-header{background:#5b4b8a;color:white;padding:20px 16px;text-align:center}
-h1{font-size:22px;margin:0 0 5px}header p{margin:0;font-size:13px;opacity:.9}
-main{max-width:560px;margin:auto;padding:14px}.card{background:white;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 10px #00000012}
-h2{font-size:18px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-label{font-size:13px;font-weight:bold;display:block;margin-bottom:5px}input,button{width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;font-size:16px}
-button{background:#5b4b8a;color:#fff;border:0;font-weight:bold;margin-top:10px}.secondary{background:#777}.new-day{background:#5b4b8a}
-.result{text-align:center;font-size:30px;font-weight:bold;margin-top:14px;color:#5b4b8a}.small{text-align:center;font-size:12px;color:#666;margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
-.stat{display:flex;justify-content:space-between;font-size:17px;padding:6px 0}
-.note{font-size:12px;color:#666;line-height:1.45}
 
-.food-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+<style>
+:root{
+  --purple:#5b4b9a;
+  --purple-dark:#4b3694;
+  --bg:#f6f4fa;
+  --text:#181818;
+  --muted:#666;
+  --border:#ddd8e8;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  padding-bottom:78px;
+}
+header{
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+  color:white;
+  padding:18px 18px;
+  box-shadow:0 2px 10px #00000022;
+}
+.header-inner{
+  max-width:720px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.app-icon{
+  width:52px;height:52px;border-radius:12px;
+  background:white;
+  object-fit:cover;
+  box-shadow:0 2px 8px #00000020;
+}
+header h1{font-size:24px;margin:0 0 3px;line-height:1.15}
+header p{margin:0;font-size:14px;opacity:.92}
+main{max-width:720px;margin:auto;padding:14px 14px 24px}
+.card{
+  background:white;
+  border-radius:18px;
+  padding:18px;
+  margin:12px 0;
+  box-shadow:0 4px 16px #00000010;
+  scroll-margin-top:12px;
+}
+h2{font-size:20px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:13px;font-weight:bold;display:block;margin-bottom:5px}
+input,select,button{
+  width:100%;padding:12px;border-radius:10px;border:1px solid #cfcbd8;font-size:16px;
+  background:white;
+}
+button{
+  background:var(--purple);color:#fff;border:0;font-weight:bold;margin-top:10px;cursor:pointer;
+}
+button:active{transform:translateY(1px)}
+.secondary{background:#777}
+.new-day{background:var(--purple)}
+.result{
+  text-align:center;font-size:30px;font-weight:bold;margin-top:14px;color:var(--purple);
+}
+.small{text-align:center;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
+.stat{
+  display:flex;justify-content:space-between;font-size:16px;padding:8px 0;border-bottom:1px solid #f0edf5;
+}
+.stat:last-of-type{border-bottom:0}
+.note{font-size:12px;color:var(--muted);line-height:1.45}
+.food-row{
+  display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;
+  padding:8px 0;border-bottom:1px solid #eee;
+}
 .food-row .name{font-weight:600}
 .food-row .pts{min-width:48px;text-align:right}
-.food-row button{width:auto;margin:0;padding:7px 9px;font-size:12px;background:#777}
-.favorite-chip{display:inline-block;margin:4px;padding:8px 10px;border-radius:999px;background:#eee;cursor:pointer;font-size:13px}
+.food-row button{width:auto;margin:0 0 0 4px;padding:7px 9px;font-size:12px;background:#777}
+.favorite-chip{
+  display:inline-block;margin:4px;padding:8px 10px;border-radius:999px;background:#eee;
+  cursor:pointer;font-size:13px
+}
 .favorite-chip:hover{background:#ddd}
-.log-total{font-size:22px;font-weight:bold;text-align:center;color:#5b4b8a;margin-top:10px}
+.log-total{font-size:22px;font-weight:bold;text-align:center;color:var(--purple);margin-top:10px}
+.share-status{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+.restaurant-row{padding:10px 0;border-bottom:1px solid #eee}
+.restaurant-title{font-weight:bold}
+.restaurant-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.qty-row{display:grid;grid-template-columns:1fr 80px 110px;gap:7px;align-items:end}
+.qty-row input{padding:9px}.qty-row button{margin-top:0;padding:9px}
 
-
-.share-card{text-align:center}
-.share-card button{font-size:16px}
-.share-status{margin-top:10px;font-size:13px;color:#666}
-
-.restaurant-row{padding:10px 0;border-bottom:1px solid #eee}.restaurant-title{font-weight:bold}.restaurant-meta{font-size:12px;color:#666;margin-top:3px}.qty-row{display:grid;grid-template-columns:1fr 80px 110px;gap:7px;align-items:end}.qty-row input{padding:9px}.qty-row button{margin-top:0;padding:9px}
+/* Compact sections inspired by the selected preview */
+.compact{
+  padding:0;
+  overflow:hidden;
+}
+.compact details{width:100%}
+.compact summary{
+  list-style:none;
+  cursor:pointer;
+  padding:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.compact summary::-webkit-details-marker{display:none}
+.compact summary::after{
+  content:"›";
+  font-size:34px;
+  line-height:24px;
+  font-weight:400;
+  color:#111;
+  transition:transform .18s ease;
+}
+.compact details[open] summary::after{transform:rotate(90deg)}
+.summary-copy h2{margin:0 0 4px}
+.summary-copy p{margin:0;font-size:13px;color:var(--muted)}
+.compact-content{
+  padding:0 18px 18px;
+  border-top:1px solid #f0edf5;
+}
+.share-bottom{
+  text-align:center;
+  padding:12px 0 4px;
+}
+.share-bottom button{
+  background:white;
+  color:var(--purple);
+  border:2px solid var(--purple);
+  margin:0;
+  max-width:100%;
+}
+.tracker-actions{
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid #eee;
+}
+.tracker-actions details summary{
+  cursor:pointer;
+  font-weight:bold;
+  color:var(--purple);
+  padding:6px 0;
+}
+.bottom-nav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:1000;
+  background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+  box-shadow:0 -2px 10px #00000022;
+}
+.bottom-nav .nav-inner{
+  max-width:720px;margin:auto;
+  display:grid;grid-template-columns:repeat(4,1fr);
+}
+.bottom-nav a{
+  color:white;text-decoration:none;text-align:center;
+  padding:9px 3px 8px;font-size:11px;font-weight:bold;
+}
+.bottom-nav .ico{display:block;font-size:21px;line-height:23px;margin-bottom:2px}
+.bottom-nav a:active{background:#ffffff18}
+.section-anchor{scroll-margin-top:10px}
+@media(max-width:520px){
+  header h1{font-size:21px}
+  .app-icon{width:48px;height:48px}
+  .grid{grid-template-columns:1fr 1fr}
+  .qty-row{grid-template-columns:1fr 64px 96px}
+}
+@media(max-width:390px){
+  .grid{grid-template-columns:1fr}
+  .food-row{grid-template-columns:1fr auto}
+  .food-row>span:last-child{grid-column:1/-1;text-align:right}
+}
 </style>
+
 </head>
 <body>
-<header><h1>Classic WW POINTS Calculator</h1><p>Historical calories + fat + fiber POINTS system</p></header>
-<main>
-
-<section class="card share-card">
-<h2>Share This App</h2>
-<p class="note">Send the Classic WW POINTS calculator to a friend or family member.</p>
-<div id="shareStatus" class="share-status"></div>
-</section>
-
-<section class="card">
-<h2>Food POINTS Calculator</h2>
-<div class="grid">
-<div><label>Calories</label><input id="cal" type="number" inputmode="decimal" min="0"></div>
-<div><label>Total Fat (g)</label><input id="fat" type="number" inputmode="decimal" min="0" step=".1"></div>
-<div><label>Fiber (g)</label><input id="fiber" type="number" inputmode="decimal" min="0" step=".1"></div>
-</div>
-<button onclick="foodPoints()">Calculate POINTS</button>
-<div id="foodResult" class="result">—</div>
-<div class="small">Formula: calories ÷ 50 + fat ÷ 12 − fiber ÷ 5. Fiber is capped at 4 g. Round to nearest whole number; .50 rounds up.</div>
-</section>
-
-<section class="card">
-<h2>Daily POINTS Target</h2>
-<label>Current Weight (lb)</label>
-<input id="weight" type="number" inputmode="numeric" min="1">
-<button onclick="dailyTarget()">Calculate Daily Range</button>
-<div id="targetResult" class="result">—</div>
-<div class="small">Historical range documented in the original WW patent.</div>
-</section>
-
-<section class="card">
-<h2>Today's Tracker</h2>
-<div class="stat"><span>Daily minimum</span><b id="minStat">—</b></div>
-<div class="stat"><span>Daily maximum</span><b id="maxStat">—</b></div>
-<div class="stat"><span>Food POINTS used</span><b id="usedStat">0</b></div>
-<div class="stat"><span>Activity bonus</span><b id="bonusStat">0</b></div>
-<div class="stat"><span>POINTS remaining to maximum</span><b id="remainStat">—</b></div>
-<div class="stat"><span>Weekly POINTS bank</span><b id="bankStat">0</b></div>
-<div class="grid">
-<div><label>Add food POINTS</label><input id="addPts" type="number" inputmode="decimal" min="0" step="1"></div>
-<div><label>Moderate exercise (min)</label><input id="exercise" type="number" inputmode="numeric" min="0" step="20"></div>
-</div>
-<button onclick="addFood()">Add Food</button>
-<button onclick="addExercise()">Add Activity Bonus</button>
-<button class="new-day" onclick="newDay()">New Day</button>
-<button class="secondary" onclick="startWeek()">Start New Week</button>
-<p class="note">The original patent describes 1 bonus POINT for each 20 minutes of moderate physical activity (examples include walking, dancing and canoeing). This simple tracker uses that documented example rather than pretending to reproduce later WW exercise formulas.</p>
-</section>
-
-
-<section class="card">
-<h2>Food Log</h2>
-<div class="grid">
-  <div>
-    <label>Food name</label>
-    <input id="foodName" type="text" placeholder="e.g. Honey chipotle salmon">
+<header>
+  <div class="header-inner">
+    <img class="app-icon" src="icon-192.png" alt="">
+    <div>
+      <h1>Classic WW POINTS Calculator</h1>
+      <p>Original POINTS plan calculator &amp; tracker</p>
+    </div>
   </div>
-  <div>
-    <label>POINTS</label>
-    <input id="foodLogPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
+</header>
+
+<main id="calculator">
+<section class="card section-anchor" id="foodCalculator">
+  <h2>Food POINTS Calculator</h2>
+  <div class="grid">
+    <div><label>Calories</label><input id="cal" type="number" inputmode="decimal" min="0"></div>
+    <div><label>Total Fat (g)</label><input id="fat" type="number" inputmode="decimal" min="0" step=".1"></div>
+    <div><label>Fiber (g)</label><input id="fiber" type="number" inputmode="decimal" min="0" step=".1"></div>
   </div>
+  <button onclick="foodPoints()">Calculate POINTS</button>
+  <div id="foodResult" class="result">—</div>
+  <div class="small">Formula: calories ÷ 50 + fat ÷ 12 − fiber ÷ 5. Fiber is capped at 4 g. Round to nearest whole number; .50 rounds up.</div>
+</section>
+
+<section class="card">
+  <h2>Daily POINTS Target</h2>
+  <label>Current Weight (lb)</label>
+  <input id="weight" type="number" inputmode="numeric" min="1">
+  <button onclick="dailyTarget()">Calculate Daily Range</button>
+  <div id="targetResult" class="result">—</div>
+  <div class="small">Historical range documented in the original WW patent.</div>
+</section>
+
+<section class="card section-anchor" id="tracker">
+  <h2>Today's Tracker</h2>
+  <div class="stat"><span>Daily minimum</span><b id="minStat">—</b></div>
+  <div class="stat"><span>Daily maximum</span><b id="maxStat">—</b></div>
+  <div class="stat"><span>POINTS used</span><b id="usedStat">0</b></div>
+  <div class="stat"><span>Activity bonus</span><b id="bonusStat">0</b></div>
+  <div class="stat"><span>POINTS remaining</span><b id="remainStat">—</b></div>
+  <div class="stat"><span>Weekly POINTS bank</span><b id="bankStat">0</b></div>
+
+  <div class="tracker-actions">
+    <details>
+      <summary>Tracker controls</summary>
+      <div class="grid" style="margin-top:8px">
+        <div><label>Add food POINTS</label><input id="addPts" type="number" inputmode="decimal" min="0" step="1"></div>
+        <div><label>Moderate exercise (min)</label><input id="exercise" type="number" inputmode="numeric" min="0" step="20"></div>
+      </div>
+      <button onclick="addFood()">Add Food</button>
+      <button onclick="addExercise()">Add Activity Bonus</button>
+      <button class="new-day" onclick="newDay()">New Day</button>
+      <button class="secondary" onclick="startWeek()">Start New Week</button>
+      <p class="note">The original patent describes 1 bonus POINT for each 20 minutes of moderate physical activity.</p>
+    </details>
+  </div>
+</section>
+
+<section class="card section-anchor" id="foodLog">
+  <h2>Food Log</h2>
+  <div class="grid">
+    <div>
+      <label>Food name</label>
+      <input id="foodName" type="text" placeholder="e.g. Honey chipotle salmon">
+    </div>
+    <div>
+      <label>POINTS</label>
+      <input id="foodLogPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
+    </div>
+  </div>
+  <button onclick="addFoodLogEntry()">Add to Today's Log</button>
+  <div class="log-total">Today's total: <span id="foodLogTotal">0</span> POINTS</div>
+  <div id="todayFoodLog" class="note" style="margin-top:10px">No foods logged yet.</div>
+</section>
+
+<section class="card compact section-anchor" id="favorites">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Favorite Foods</h2>
+        <p>Your saved foods for quick logging.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <label>Choose from Basic Food List</label>
+      <select id="basicFoodSelect" onchange="loadBasicFood()">
+        <option value="">-- Select a food --</option>
+      </select>
+      <p class="note">Selecting a food fills in the name and POINTS below. For foods shown as a range, the higher value is used for conservative tracking.</p>
+      <div class="grid">
+        <div>
+          <label>Favorite food name</label>
+          <input id="favName" type="text" placeholder="e.g. Yoplait Whips">
+        </div>
+        <div>
+          <label>POINTS</label>
+          <input id="favPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
+        </div>
+      </div>
+      <button onclick="saveFavoriteFood()">Save Favorite</button>
+      <div id="favoritesList" class="note" style="margin-top:10px">No favorites saved yet.</div>
+      <p class="note">Tap a favorite to add it directly to today's food log.</p>
+    </div>
+  </details>
+</section>
+
+<section class="card compact section-anchor" id="previousSection">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Previous Days</h2>
+        <p>View and edit past days.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <div id="previousDays" class="note">No previous days saved yet.</div>
+    </div>
+  </details>
+</section>
+
+<section class="card compact section-anchor" id="restaurantSection">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Restaurant POINTS</h2>
+        <p>Look up menu items from 10 popular restaurants.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <label>Choose Restaurant</label>
+      <select id="restaurantSelect" onchange="renderRestaurantMenu()">
+        <option value="">-- Select a restaurant --</option>
+      </select>
+      <label style="margin-top:10px">Search menu</label>
+      <input id="restaurantSearch" type="text" placeholder="e.g. nuggets, fries, taco" oninput="renderRestaurantMenu()">
+      <div id="restaurantMenu" class="note" style="margin-top:10px">Choose a restaurant to see menu items.</div>
+      <p class="note">Restaurant POINTS use the classic calories + fat + fiber formula from published nutrition information.</p>
+    </div>
+  </details>
+</section>
+
+<section class="card compact section-anchor" id="historySection">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Weekly History</h2>
+        <p>Completed days and weekly POINTS bank.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <div id="history" class="note">No days recorded yet.</div>
+      <button class="secondary" onclick="clearHistory()">Clear Saved History</button>
+      <p class="note">Your totals are saved on this device using browser storage.</p>
+    </div>
+  </details>
+</section>
+
+<section class="card compact">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Historical Daily Range</h2>
+        <p>Original daily POINTS ranges by weight.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <table><tr><th>Weight</th><th>POINTS/day</th></tr>
+        <tr><td>Under 150 lb</td><td>18–25</td></tr>
+        <tr><td>150–174 lb</td><td>20–27</td></tr>
+        <tr><td>175–199 lb</td><td>22–29</td></tr>
+        <tr><td>200–224 lb</td><td>24–31</td></tr>
+        <tr><td>225–250 lb</td><td>26–33</td></tr>
+        <tr><td>Over 250 lb</td><td>28–35</td></tr>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="card compact">
+  <details>
+    <summary>
+      <div class="summary-copy">
+        <h2>Important</h2>
+        <p>About this historical recreation.</p>
+      </div>
+    </summary>
+    <div class="compact-content">
+      <p class="note">This is a historical recreation for personal reference, not the current WeightWatchers program and not medical advice. WW programs changed over time.</p>
+    </div>
+  </details>
+</section>
+
+<div class="share-bottom">
+  <button onclick="shareApp()">↗ &nbsp; Share This App</button>
+  <div id="shareStatus" class="share-status"></div>
 </div>
-<button onclick="addFoodLogEntry()">Add to Today's Log</button>
-<div class="log-total">Today's total: <span id="foodLogTotal">0</span> POINTS</div>
-<div id="todayFoodLog" class="note" style="margin-top:10px">No foods logged yet.</div>
-</section>
-
-<section class="card">
-<h2>Favorite Foods</h2>
-<label>Choose from Basic Food List</label>
-<select id="basicFoodSelect" onchange="loadBasicFood()">
-  <option value="">-- Select a food --</option>
-</select>
-<p class="note">Selecting a food fills in the name and POINTS below. Tap Save Favorite if you want to keep it in your Favorites. For foods shown as a POINTS range, the higher value is filled in automatically for conservative tracking.</p>
-<div class="grid">
-  <div>
-    <label>Favorite food name</label>
-    <input id="favName" type="text" placeholder="e.g. Yoplait Whips">
-  </div>
-  <div>
-    <label>POINTS</label>
-    <input id="favPts" type="number" inputmode="decimal" min="0" step="0.5" placeholder="0">
-  </div>
-</div>
-<button onclick="saveFavoriteFood()">Save Favorite</button>
-<div id="favoritesList" class="note" style="margin-top:10px">No favorites saved yet.</div>
-<p class="note">Tap a favorite to add it directly to today's food log.</p>
-</section>
-
-<section class="card">
-<h2>Restaurant POINTS</h2>
-<label>Choose Restaurant</label>
-<select id="restaurantSelect" onchange="renderRestaurantMenu()">
-  <option value="">-- Select a restaurant --</option>
-</select>
-<label style="margin-top:10px">Search menu</label>
-<input id="restaurantSearch" type="text" placeholder="e.g. nuggets, fries, taco" oninput="renderRestaurantMenu()">
-<div id="restaurantMenu" class="note" style="margin-top:10px">Choose a restaurant to see menu items.</div>
-<p class="note">Restaurant POINTS use the classic calories + fat + fiber formula from published nutrition information. Menus and recipes can change, so values are a practical reference rather than current WeightWatchers values.</p>
-</section>
-
-<section class="card">
-<h2>Previous Days</h2>
-<div id="previousDays" class="note">No previous days saved yet.</div>
-</section>
-
-<section class="card">
-<h2>Weekly History</h2>
-<div id="history" class="note">No days recorded yet.</div>
-<button class="secondary" onclick="clearHistory()">Clear Saved History</button>
-<p class="note">Your daily totals and weekly history are saved on this device using browser storage, so closing the app will not erase them.</p>
-</section>
-
-<section class="card">
-<h2>Historical Daily Range</h2>
-<table><tr><th>Weight</th><th>POINTS/day</th></tr>
-<tr><td>Under 150 lb</td><td>18–25</td></tr>
-<tr><td>150–174 lb</td><td>20–27</td></tr>
-<tr><td>175–199 lb</td><td>22–29</td></tr>
-<tr><td>200–224 lb</td><td>24–31</td></tr>
-<tr><td>225–250 lb</td><td>26–33</td></tr>
-<tr><td>Over 250 lb</td><td>28–35</td></tr>
-</table>
-</section>
-
-<section class="card">
-<h2>Important</h2>
-<p class="note">This is a historical recreation for personal reference, not the current WeightWatchers program and not medical advice. The underlying patent specifies the classic formula and daily ranges. WW programs changed over time.</p>
-</section>
-
-<section class="card">
-  <h2>Share App</h2>
-  <button onclick="shareApp()">Share App</button>
-</section>
-
 </main>
+
+<nav class="bottom-nav" aria-label="App navigation">
+  <div class="nav-inner">
+    <a href="#calculator"><span class="ico">▦</span>Calculator</a>
+    <a href="#foodLog"><span class="ico">☷</span>Food Log</a>
+    <a href="#favorites"><span class="ico">★</span>Favorites</a>
+    <a href="#previousSection"><span class="ico">◷</span>History</a>
+  </div>
+</nav>
 <script>
 let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
   minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],
@@ -673,5 +891,6 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
 }
 </script>
+
 </body>
 </html>

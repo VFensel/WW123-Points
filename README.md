@@ -30,3 +30,14 @@ Updates:
 
 ## v10 update
 - Moved the Share App button to the bottom of the app page.
+
+
+## v11 layout update
+- Removed the empty Share This App card from the top.
+- Added a purple app header with the app icon and subtitle.
+- Reorganized the page into cleaner rounded cards.
+- Favorite Foods, Previous Days, Restaurant POINTS, Weekly History, Historical Daily Range, and Important are now compact expandable sections.
+- Kept Food Calculator, Daily Target, Today's Tracker, and Food Log immediately accessible.
+- Moved Share This App to a bordered button at the bottom.
+- Added a fixed bottom navigation bar for Calculator, Food Log, Favorites, and History.
+- Preserved all v10 tracking, editing, restaurant, and previous-day functionality.
