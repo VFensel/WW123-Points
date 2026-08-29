@@ -47,3 +47,9 @@ Updates:
 - Fixed Weekly History so it uses the same saved-day data as Previous Days.
 - Weekly History now shows the same completed days and food entries instead of relying only on the older summary-only history array.
 - Weekly POINTS bank and activity/net information are still shown when available.
+
+
+## v13 update
+- Removed the Weekly History section from the app.
+- Previous Days remains the single source for viewing and editing completed days.
+- Existing saved data and New Day behavior are preserved.
