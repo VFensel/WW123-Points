@@ -70,3 +70,10 @@ Updates:
 - Weight-loss progress now renders from the saved weigh-in history.
 - Service-worker cache was corrected from the stale v11 cache name to v17 and now fetches fresh files before falling back to cache.
 - JavaScript was syntax-checked with Node before packaging.
+
+## v18 cache reset / tracker repair
+- Removed the old offline service-worker caching layer that could keep the installed app stuck on an older version.
+- Added a visible v18 marker in the app header.
+- Changed the installed-app start URL to index.html?v=18.
+- Daily POINTS calculation now writes directly to both the Daily Target result and Today's Tracker.
+- Weekly weigh-ins still preserve localStorage data and update the latest weight, progress, and daily range.

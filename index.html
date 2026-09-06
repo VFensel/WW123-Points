@@ -191,7 +191,7 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
     <img class="app-icon" src="icon-192.png" alt="">
     <div>
       <h1>Classic WW POINTS Calculator</h1>
-      <p>Original POINTS plan calculator &amp; tracker</p>
+      <p>Original POINTS plan calculator &amp; tracker <span style="opacity:.8">• v18</span></p>
     </div>
   </div>
 </header>
@@ -479,18 +479,20 @@ function applyDailyTargetFromWeight(w){
 
 function dailyTarget(){
   const input=document.getElementById('weight');
-  const w=parseFloat(input.value);
+  const w=Number(input && input.value);
   const out=document.getElementById('targetResult');
   if(!Number.isFinite(w) || w<=0){
-    out.textContent="Enter your weight";
+    if(out) out.textContent="Enter your weight";
     return;
   }
   const r=rangeFor(w);
   state.minPts=r[0];
   state.maxPts=r[1];
-  out.textContent=state.minPts+"–"+state.maxPts+" POINTS";
+  if(out) out.textContent=state.minPts+"–"+state.maxPts+" POINTS";
+  const min=document.getElementById('minStat'), max=document.getElementById('maxStat');
+  if(min) min.textContent=state.minPts;
+  if(max) max.textContent=state.maxPts;
   save();
-  update();
 }
 
 function ensureTodayLog(){
@@ -798,20 +800,18 @@ function renderHistory(){
 }
 
 function addWeighIn(){
- const date=document.getElementById('weighDate').value||localDateKey(), w=Number(document.getElementById('weighWeight').value);
- if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
- if(state.initialWeight==null) state.initialWeight=w;
- const i=state.weighIns.findIndex(x=>x.date===date), e={date,weight:Math.round(w*10)/10};
- if(i>=0) state.weighIns[i]=e; else state.weighIns.push(e);
- state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
- applyDailyTargetFromWeight(w);
- document.getElementById('weighWeight').value="";
- save();
- update();
- const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
- if(latest && latest.date===date){
-   alert("Weigh-in saved. Daily POINTS range and 10% goal progress have been updated.");
- }
+  const date=document.getElementById('weighDate').value||localDateKey();
+  const w=Number(document.getElementById('weighWeight').value);
+  if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
+  if(state.initialWeight==null) state.initialWeight=w;
+  const i=state.weighIns.findIndex(x=>x.date===date);
+  const e={date,weight:Math.round(w*10)/10};
+  if(i>=0) state.weighIns[i]=e; else state.weighIns.push(e);
+  state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
+  applyDailyTargetFromWeight(w);
+  save();
+  update();
+  document.getElementById('weighWeight').value="";
 }
 function editWeighIn(date){
  const e=state.weighIns.find(x=>x.date===date); if(!e)return;
@@ -963,9 +963,21 @@ async function shareApp(){
   }
 }
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
-}
+// v18 deliberately removes the old offline service worker because earlier
+// cached app shells could keep serving stale versions after GitHub updates.
+// This keeps localStorage (food logs/weigh-ins) intact while clearing only caches.
+window.addEventListener("load", async ()=>{
+  try{
+    if("serviceWorker" in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if("caches" in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+});
 </script>
 
 </body>
