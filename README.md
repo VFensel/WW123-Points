@@ -58,3 +58,7 @@ Updates:
 - Weekly Weigh-In progress now uses the most recent weigh-in date and shows pounds lost, remaining pounds, milestone count, and progress to the next 10% milestone.
 - Saving or editing the newest weigh-in now automatically recalculates the Daily POINTS Target.
 - On app load, the current Daily POINTS range is synchronized to the most recent saved weigh-in.
+
+## v16 critical repair
+- Fixed a JavaScript syntax error introduced in v14/v15 migration code that prevented the weigh-in and daily target update code from running.
+- Saving a later weigh-in now updates weight-loss progress and the current Daily POINTS range.

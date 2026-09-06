@@ -391,7 +391,9 @@ let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
 if(!state.foodLog) state.foodLog={};
 if(!state.completedLogs) state.completedLogs=[];
 if(!state.favorites) state.favorites=[];
-if(!Array.isArray(state.history)) state.history=[];\nif(!Array.isArray(state.weighIns)) state.weighIns=[];\nif(state.initialWeight===undefined) state.initialWeight=null;
+if(!Array.isArray(state.history)) state.history=[];
+if(!Array.isArray(state.weighIns)) state.weighIns=[];
+if(state.initialWeight===undefined) state.initialWeight=null;
 
 function save(){localStorage.setItem("classicWWState",JSON.stringify(state));}
 function roundWW(x){return Math.floor(x+0.5);}
@@ -804,7 +806,8 @@ function addWeighIn(){
  state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
  applyDailyTargetFromWeight(w);
  document.getElementById('weighWeight').value="";
- save();update();
+ save();
+ update();
 }
 function editWeighIn(date){
  const e=state.weighIns.find(x=>x.date===date); if(!e)return;
@@ -847,7 +850,7 @@ function renderWeighIns(){
    <div style="margin-top:8px">Next milestone weight: <b>${nextTarget.toFixed(1)} lb</b></div>
    <div>Remaining to next milestone: <b>${toNext.toFixed(1)} lb</b></div>
    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
-   <div class="note">${pct.toFixed(0)}% of the way from the last milestone to the next 10% milestone.</div>
+   <div class="note">${pct.toFixed(0)}% of the way to your next 10% milestone.</div>
  </div>`;
 
  hist.innerHTML='<b>Weigh-In History</b>'+a.map(x=>`<div class="weigh-row"><span>${x.date}</span><b>${x.weight.toFixed(1)} lb</b><span><button onclick="editWeighIn('${x.date}')">Edit</button><button onclick="removeWeighIn('${x.date}')">Remove</button></span></div>`).join("");
