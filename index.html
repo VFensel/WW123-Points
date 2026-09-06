@@ -808,6 +808,10 @@ function addWeighIn(){
  document.getElementById('weighWeight').value="";
  save();
  update();
+ const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
+ if(latest && latest.date===date){
+   alert("Weigh-in saved. Daily POINTS range and 10% goal progress have been updated.");
+ }
 }
 function editWeighIn(date){
  const e=state.weighIns.find(x=>x.date===date); if(!e)return;
@@ -855,16 +859,20 @@ function renderWeighIns(){
 
  hist.innerHTML='<b>Weigh-In History</b>'+a.map(x=>`<div class="weigh-row"><span>${x.date}</span><b>${x.weight.toFixed(1)} lb</b><span><button onclick="editWeighIn('${x.date}')">Edit</button><button onclick="removeWeighIn('${x.date}')">Remove</button></span></div>`).join("");
 }
-\nfunction update(){
+
+function update(){
+  if(state.weighIns && state.weighIns.length){
+    const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(latest) applyDailyTargetFromWeight(Number(latest.weight));
+  }
   document.getElementById('minStat').textContent=state.minPts??"—";
   document.getElementById('maxStat').textContent=state.maxPts??"—";
   document.getElementById('usedStat').textContent=state.used||0;
   document.getElementById('bonusStat').textContent=state.bonus||0;
   document.getElementById('bankStat').textContent=state.bank||0;
   document.getElementById('remainStat').textContent=state.maxPts==null?"—":Math.max(0,state.maxPts+(state.bonus||0)-(state.used||0));
-  if(state.minPts!==null && state.maxPts!==null){
-    document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts+" POINTS";
-  }
+  document.getElementById('targetResult').textContent=
+    (state.minPts!==null && state.maxPts!==null) ? state.minPts+"–"+state.maxPts+" POINTS" : "—";
   renderHistory(); renderFoodLog(); renderFavorites(); renderPreviousDays(); renderWeighIns();
 }
 function addFood(){

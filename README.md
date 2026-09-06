@@ -62,3 +62,11 @@ Updates:
 ## v16 critical repair
 - Fixed a JavaScript syntax error introduced in v14/v15 migration code that prevented the weigh-in and daily target update code from running.
 - Saving a later weigh-in now updates weight-loss progress and the current Daily POINTS range.
+
+
+## v17 critical fix
+- Removed a remaining JavaScript syntax error that prevented the app script from running.
+- Daily POINTS Target now synchronizes to the newest saved weigh-in on every refresh/update.
+- Weight-loss progress now renders from the saved weigh-in history.
+- Service-worker cache was corrected from the stale v11 cache name to v17 and now fetches fresh files before falling back to cache.
+- JavaScript was syntax-checked with Node before packaging.
