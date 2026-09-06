@@ -53,3 +53,4 @@ Updates:
 - Removed the Weekly History section from the app.
 - Previous Days remains the single source for viewing and editing completed days.
 - Existing saved data and New Day behavior are preserved.
+\n\n## v14\n- Fixed Start New Week button.\n- Added weekly weigh-ins and 10% milestone tracking.\n

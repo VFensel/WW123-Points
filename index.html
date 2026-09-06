@@ -68,7 +68,7 @@ button{
 }
 button:active{transform:translateY(1px)}
 .secondary{background:#777}
-.new-day{background:var(--purple)}
+.new-day,.new-week{background:var(--purple)}
 .result{
   text-align:center;font-size:30px;font-weight:bold;margin-top:14px;color:var(--purple);
 }
@@ -93,7 +93,7 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
 }
 .favorite-chip:hover{background:#ddd}
 .log-total{font-size:22px;font-weight:bold;text-align:center;color:var(--purple);margin-top:10px}
-.share-status{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+.share-status{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}.goal-box{background:#f7f4fc;border:1px solid #e7e0f2;border-radius:14px;padding:14px;margin-top:14px}.goal-big{font-size:25px;font-weight:bold;color:var(--purple);margin:7px 0}.progress-track{height:12px;background:#e7e2ed;border-radius:999px;overflow:hidden;margin:10px 0 5px}.progress-fill{height:100%;background:var(--purple)}.weigh-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.weigh-row button{width:auto;margin:0 0 0 4px;padding:7px 9px;font-size:12px;background:#777}
 .restaurant-row{padding:10px 0;border-bottom:1px solid #eee}
 .restaurant-title{font-weight:bold}
 .restaurant-meta{font-size:12px;color:var(--muted);margin-top:3px}
@@ -237,7 +237,7 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
       <button onclick="addFood()">Add Food</button>
       <button onclick="addExercise()">Add Activity Bonus</button>
       <button class="new-day" onclick="newDay()">New Day</button>
-      <button class="secondary" onclick="startWeek()">Start New Week</button>
+      <button class="new-week" onclick="startWeek()">Start New Week</button>
       <p class="note">The original patent describes 1 bonus POINT for each 20 minutes of moderate physical activity.</p>
     </details>
   </div>
@@ -291,6 +291,13 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
   </details>
 </section>
 
+<section class="card section-anchor" id="weighInSection">
+<h2>Weekly Weigh-In</h2>
+<p class="note">Track your weekly weight and progress toward each 10% milestone.</p>
+<div class="grid"><div><label>Weigh-in date</label><input id="weighDate" type="date"></div><div><label>Weight (lb)</label><input id="weighWeight" type="number" inputmode="decimal" min="1" step="0.1"></div></div>
+<button onclick="addWeighIn()">Save Weigh-In</button>
+<div id="goalProgress"></div><div id="weighInHistory" class="note" style="margin-top:12px"></div>
+</section>
 <section class="card compact section-anchor" id="previousSection">
   <details>
     <summary>
@@ -379,12 +386,12 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
 <script>
 let state=JSON.parse(localStorage.getItem("classicWWState")||"null")||{
   minPts:null,maxPts:null,used:0,bonus:0,bank:0,history:[],
-  weekStart:new Date().toISOString().slice(0,10),foodLog:{},favorites:[],completedLogs:[]
+  weekStart:new Date().toISOString().slice(0,10),foodLog:{},favorites:[],completedLogs:[],weighIns:[],initialWeight:null
 };
 if(!state.foodLog) state.foodLog={};
 if(!state.completedLogs) state.completedLogs=[];
 if(!state.favorites) state.favorites=[];
-if(!Array.isArray(state.history)) state.history=[];
+if(!Array.isArray(state.history)) state.history=[];\nif(!Array.isArray(state.weighIns)) state.weighIns=[];\nif(state.initialWeight===undefined) state.initialWeight=null;
 
 function save(){localStorage.setItem("classicWWState",JSON.stringify(state));}
 function roundWW(x){return Math.floor(x+0.5);}
@@ -775,7 +782,35 @@ function renderHistory(){
   if(!state.history.length){el.textContent="No completed days recorded yet.";return;}
   el.innerHTML=state.history.map(d=>`<div style="padding:7px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — ${d.used} used, ${d.bonus} activity, net ${d.net}</div>`).join("");
 }
-function update(){
+
+function addWeighIn(){
+ const date=document.getElementById('weighDate').value||localDateKey(), w=Number(document.getElementById('weighWeight').value);
+ if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
+ if(state.initialWeight==null) state.initialWeight=w;
+ const i=state.weighIns.findIndex(x=>x.date===date), e={date,weight:Math.round(w*10)/10};
+ if(i>=0) state.weighIns[i]=e; else state.weighIns.push(e);
+ document.getElementById('weighWeight').value=""; save();update();
+}
+function editWeighIn(date){
+ const e=state.weighIns.find(x=>x.date===date); if(!e)return;
+ const v=prompt("Edit weight for "+date+":",e.weight); if(v===null)return;
+ const w=Number(v); if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
+ e.weight=Math.round(w*10)/10; save();update();
+}
+function removeWeighIn(date){
+ if(!confirm("Remove the weigh-in for "+date+"?"))return;
+ state.weighIns=state.weighIns.filter(x=>x.date!==date); save();update();
+}
+function renderWeighIns(){
+ const box=document.getElementById('goalProgress'), hist=document.getElementById('weighInHistory'), de=document.getElementById('weighDate');
+ if(de&&!de.value)de.value=localDateKey(); if(!box||!hist)return;
+ if(state.initialWeight==null||!state.weighIns.length){box.innerHTML='<div class="goal-box"><b>Your first 10% goal</b><p class="note">Your first saved weigh-in sets your starting weight and first milestone.</p></div>';hist.textContent="No weigh-ins saved yet.";return;}
+ const a=[...state.weighIns].sort((x,y)=>y.date.localeCompare(x.date)), cur=a[0].weight, start=state.initialWeight, unit=start*.10, lost=start-cur;
+ const reached=Math.max(0,Math.floor((lost+0.0001)/unit)), nextLoss=(reached+1)*unit, nextTarget=start-nextLoss, stageLost=Math.max(0,lost-reached*unit), pct=Math.min(100,Math.max(0,stageLost/unit*100));
+ box.innerHTML=`<div class="goal-box"><b>10% Goal Progress</b><div>Starting weight: <b>${start.toFixed(1)} lb</b></div><div>First goal: lose <b>${unit.toFixed(1)} lb</b> → <b>${(start-unit).toFixed(1)} lb</b></div><div>Current weight: <b>${cur.toFixed(1)} lb</b></div><div class="goal-big">${Math.max(0,lost).toFixed(1)} lb lost</div>${reached?`<div><b>${reached} milestone${reached==1?"":"s"} reached!</b></div>`:""}<div style="margin-top:8px">Next 10% milestone: <b>${nextTarget.toFixed(1)} lb</b></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="note">${pct.toFixed(0)}% of the way to the next milestone.</div></div>`;
+ hist.innerHTML='<b>Weigh-In History</b>'+a.map(x=>`<div class="weigh-row"><span>${x.date}</span><b>${x.weight.toFixed(1)} lb</b><span><button onclick="editWeighIn('${x.date}')">Edit</button><button onclick="removeWeighIn('${x.date}')">Remove</button></span></div>`).join("");
+}
+\nfunction update(){
   document.getElementById('minStat').textContent=state.minPts??"—";
   document.getElementById('maxStat').textContent=state.maxPts??"—";
   document.getElementById('usedStat').textContent=state.used||0;
@@ -785,7 +820,7 @@ function update(){
   if(state.minPts!==null && state.maxPts!==null){
     document.getElementById('targetResult').textContent=state.minPts+"–"+state.maxPts+" POINTS";
   }
-  renderHistory(); renderFoodLog(); renderFavorites(); renderPreviousDays();
+  renderHistory(); renderFoodLog(); renderFavorites(); renderPreviousDays(); renderWeighIns();
 }
 function addFood(){
   state.used+=+document.getElementById('addPts').value||0;
@@ -825,9 +860,8 @@ function newDay(){
   update();
 }
 function startWeek(){
-  if((state.used||0)>0||(state.bonus||0)>0)newDay();
-  state.bank=0; state.history=[]; state.weekStart=localDateKey();
-  save(); update();
+ if(!confirm("Start a new POINTS week? This resets the weekly POINTS bank. Previous Days and weigh-ins will stay saved."))return;
+ state.bank=0;state.history=[];state.weekStart=localDateKey();save();update();alert("New POINTS week started.");
 }
 function clearHistory(){
   if(confirm("Clear all saved weekly history?")){
