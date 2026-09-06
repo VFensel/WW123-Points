@@ -54,3 +54,7 @@ Updates:
 - Previous Days remains the single source for viewing and editing completed days.
 - Existing saved data and New Day behavior are preserved.
 \n\n## v14\n- Fixed Start New Week button.\n- Added weekly weigh-ins and 10% milestone tracking.\n
+## v15 fix
+- Weekly Weigh-In progress now uses the most recent weigh-in date and shows pounds lost, remaining pounds, milestone count, and progress to the next 10% milestone.
+- Saving or editing the newest weigh-in now automatically recalculates the Daily POINTS Target.
+- On app load, the current Daily POINTS range is synchronized to the most recent saved weigh-in.

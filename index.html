@@ -463,6 +463,18 @@ function rangeFor(w){
   return[28,35];
 }
 
+
+function applyDailyTargetFromWeight(w){
+  if(!Number.isFinite(w)||w<=0) return;
+  const range=rangeFor(w);
+  state.minPts=range[0];
+  state.maxPts=range[1];
+  const weightInput=document.getElementById('weight');
+  if(weightInput) weightInput.value=Math.round(w*10)/10;
+  const targetResult=document.getElementById('targetResult');
+  if(targetResult) targetResult.textContent=state.minPts+"–"+state.maxPts+" POINTS";
+}
+
 function dailyTarget(){
   const input=document.getElementById('weight');
   const w=parseFloat(input.value);
@@ -789,13 +801,19 @@ function addWeighIn(){
  if(state.initialWeight==null) state.initialWeight=w;
  const i=state.weighIns.findIndex(x=>x.date===date), e={date,weight:Math.round(w*10)/10};
  if(i>=0) state.weighIns[i]=e; else state.weighIns.push(e);
- document.getElementById('weighWeight').value=""; save();update();
+ state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
+ applyDailyTargetFromWeight(w);
+ document.getElementById('weighWeight').value="";
+ save();update();
 }
 function editWeighIn(date){
  const e=state.weighIns.find(x=>x.date===date); if(!e)return;
  const v=prompt("Edit weight for "+date+":",e.weight); if(v===null)return;
  const w=Number(v); if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
- e.weight=Math.round(w*10)/10; save();update();
+ e.weight=Math.round(w*10)/10;
+ const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
+ if(latest && latest.date===date) applyDailyTargetFromWeight(w);
+ save();update();
 }
 function removeWeighIn(date){
  if(!confirm("Remove the weigh-in for "+date+"?"))return;
@@ -804,10 +822,34 @@ function removeWeighIn(date){
 function renderWeighIns(){
  const box=document.getElementById('goalProgress'), hist=document.getElementById('weighInHistory'), de=document.getElementById('weighDate');
  if(de&&!de.value)de.value=localDateKey(); if(!box||!hist)return;
- if(state.initialWeight==null||!state.weighIns.length){box.innerHTML='<div class="goal-box"><b>Your first 10% goal</b><p class="note">Your first saved weigh-in sets your starting weight and first milestone.</p></div>';hist.textContent="No weigh-ins saved yet.";return;}
- const a=[...state.weighIns].sort((x,y)=>y.date.localeCompare(x.date)), cur=a[0].weight, start=state.initialWeight, unit=start*.10, lost=start-cur;
- const reached=Math.max(0,Math.floor((lost+0.0001)/unit)), nextLoss=(reached+1)*unit, nextTarget=start-nextLoss, stageLost=Math.max(0,lost-reached*unit), pct=Math.min(100,Math.max(0,stageLost/unit*100));
- box.innerHTML=`<div class="goal-box"><b>10% Goal Progress</b><div>Starting weight: <b>${start.toFixed(1)} lb</b></div><div>First goal: lose <b>${unit.toFixed(1)} lb</b> → <b>${(start-unit).toFixed(1)} lb</b></div><div>Current weight: <b>${cur.toFixed(1)} lb</b></div><div class="goal-big">${Math.max(0,lost).toFixed(1)} lb lost</div>${reached?`<div><b>${reached} milestone${reached==1?"":"s"} reached!</b></div>`:""}<div style="margin-top:8px">Next 10% milestone: <b>${nextTarget.toFixed(1)} lb</b></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><div class="note">${pct.toFixed(0)}% of the way to the next milestone.</div></div>`;
+ if(state.initialWeight==null||!state.weighIns.length){
+   box.innerHTML='<div class="goal-box"><b>Your first 10% goal</b><p class="note">Your first saved weigh-in sets your starting weight and first milestone.</p></div>';
+   hist.textContent="No weigh-ins saved yet.";
+   return;
+ }
+ const a=[...state.weighIns].sort((x,y)=>y.date.localeCompare(x.date));
+ const cur=a[0].weight, start=state.initialWeight, ten=start*0.10, lost=start-cur;
+ const completed=Math.max(0,Math.floor((lost+0.000001)/ten));
+ const currentStageStart=start-(completed*ten);
+ const nextTarget=start-((completed+1)*ten);
+ const progressIntoStage=Math.max(0,currentStageStart-cur);
+ const pct=Math.max(0,Math.min(100,(progressIntoStage/ten)*100));
+ const firstTarget=start-ten;
+ const toNext=Math.max(0,cur-nextTarget);
+
+ box.innerHTML=`<div class="goal-box">
+   <b>10% Goal Progress</b>
+   <div>Starting weight: <b>${start.toFixed(1)} lb</b></div>
+   <div>First 10% goal: lose <b>${ten.toFixed(1)} lb</b> → <b>${firstTarget.toFixed(1)} lb</b></div>
+   <div>Current weight: <b>${cur.toFixed(1)} lb</b></div>
+   <div class="goal-big">${Math.max(0,lost).toFixed(1)} lb lost</div>
+   ${completed>0?`<div><b>${completed} 10% milestone${completed===1?"":"s"} reached!</b></div>`:""}
+   <div style="margin-top:8px">Next milestone weight: <b>${nextTarget.toFixed(1)} lb</b></div>
+   <div>Remaining to next milestone: <b>${toNext.toFixed(1)} lb</b></div>
+   <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+   <div class="note">${pct.toFixed(0)}% of the way from the last milestone to the next 10% milestone.</div>
+ </div>`;
+
  hist.innerHTML='<b>Weigh-In History</b>'+a.map(x=>`<div class="weigh-row"><span>${x.date}</span><b>${x.weight.toFixed(1)} lb</b><span><button onclick="editWeighIn('${x.date}')">Edit</button><button onclick="removeWeighIn('${x.date}')">Remove</button></span></div>`).join("");
 }
 \nfunction update(){
@@ -874,6 +916,10 @@ if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
 }
 populateBasicFoods();
 initRestaurants();
+if(state.weighIns && state.weighIns.length){
+  const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
+  if(latest) applyDailyTargetFromWeight(latest.weight);
+}
 update();
 
 
