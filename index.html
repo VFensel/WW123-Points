@@ -191,7 +191,7 @@ td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
     <img class="app-icon" src="icon-192.png" alt="">
     <div>
       <h1>Classic WW POINTS Calculator</h1>
-      <p>Original POINTS plan calculator &amp; tracker <span style="opacity:.8">• v18</span></p>
+      <p>Original POINTS plan calculator &amp; tracker <span style="opacity:.8">• v19</span></p>
     </div>
   </div>
 </header>
@@ -799,6 +799,13 @@ function renderHistory(){
   el.innerHTML=state.history.map(d=>`<div style="padding:7px 0;border-bottom:1px solid #eee"><b>${d.date}</b> — ${d.used} used, ${d.bonus} activity, net ${d.net}</div>`).join("");
 }
 
+function syncStartingWeight(){
+  const entries=(state.weighIns||[]).filter(x=>x && Number.isFinite(Number(x.weight)) && Number(x.weight)>0 && x.date);
+  if(entries.length){
+    entries.sort((a,b)=>a.date.localeCompare(b.date));
+    state.initialWeight=Number(entries[0].weight);
+  }else state.initialWeight=null;
+}
 function addWeighIn(){
   const date=document.getElementById('weighDate').value||localDateKey();
   const w=Number(document.getElementById('weighWeight').value);
@@ -808,6 +815,7 @@ function addWeighIn(){
   const e={date,weight:Math.round(w*10)/10};
   if(i>=0) state.weighIns[i]=e; else state.weighIns.push(e);
   state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
+  syncStartingWeight();
   applyDailyTargetFromWeight(w);
   save();
   update();
@@ -818,13 +826,14 @@ function editWeighIn(date){
  const v=prompt("Edit weight for "+date+":",e.weight); if(v===null)return;
  const w=Number(v); if(!Number.isFinite(w)||w<=0){alert("Please enter a valid weight.");return;}
  e.weight=Math.round(w*10)/10;
+ syncStartingWeight();
  const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
  if(latest && latest.date===date) applyDailyTargetFromWeight(w);
  save();update();
 }
 function removeWeighIn(date){
  if(!confirm("Remove the weigh-in for "+date+"?"))return;
- state.weighIns=state.weighIns.filter(x=>x.date!==date); save();update();
+ state.weighIns=state.weighIns.filter(x=>x.date!==date); syncStartingWeight(); save();update();
 }
 function renderWeighIns(){
  const box=document.getElementById('goalProgress'), hist=document.getElementById('weighInHistory'), de=document.getElementById('weighDate');
@@ -834,6 +843,7 @@ function renderWeighIns(){
    hist.textContent="No weigh-ins saved yet.";
    return;
  }
+ syncStartingWeight();
  const a=[...state.weighIns].sort((x,y)=>y.date.localeCompare(x.date));
  const cur=a[0].weight, start=state.initialWeight, ten=start*0.10, lost=start-cur;
  const completed=Math.max(0,Math.floor((lost+0.000001)/ten));
@@ -862,6 +872,7 @@ function renderWeighIns(){
 
 function update(){
   if(state.weighIns && state.weighIns.length){
+    syncStartingWeight();
     const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
     if(latest) applyDailyTargetFromWeight(Number(latest.weight));
   }
@@ -928,6 +939,7 @@ if(state.foodLog[localDateKey()] && state.foodLog[localDateKey()].length){
 populateBasicFoods();
 initRestaurants();
 if(state.weighIns && state.weighIns.length){
+  syncStartingWeight();
   const latest=[...state.weighIns].sort((a,b)=>b.date.localeCompare(a.date))[0];
   if(latest) applyDailyTargetFromWeight(latest.weight);
 }
